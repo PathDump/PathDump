@@ -15,8 +15,20 @@ PathDump
 
 ## Folder structure
 ```
-|-- controller
-|-- host
+|-- src
+    |-- controller
+        |-- Network (scripts to generate switch rules)
+	|-- API (Query processing)
+	    |--Apps
+		|-- Alerts
+		|-- MapReduce
+		|-- Loops
+    |-- host
+	|--FlowMonitor (OVS kernel -> user space -> DB go here)
+	|--API (Query processing)
+	   |--Apps
+		|-- Alerts
+		|-- MapReduce
 |-- examples
 |-- lib
 |-- conf
