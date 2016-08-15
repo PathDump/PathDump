@@ -17,18 +17,18 @@ PathDump
 ```
 |-- src
     |-- controller
-        |-- Network (scripts to generate switch rules)
-	|-- API (Query processing)
+       |-- Network (scripts to generate switch rules)
+       |-- API (Query processing)
 	   |--Apps
-		|-- Alerts
-		|-- MapReduce
-		|-- Loops
+	     |-- Alerts
+	     |-- MapReduce
+	     |-- Loops
     |-- host
-	|--FlowMonitor (OVS kernel -> user space -> DB go here)
-	|--API (Query processing)
-	   |--Apps
-		|-- Alerts
-		|-- MapReduce
+       |--FlowMonitor (OVS kernel -> user space -> DB go here)
+       |--API (Query processing)
+           |--Apps
+             |-- Alerts
+	     |-- MapReduce
 |-- examples
 |-- lib
 |-- conf
