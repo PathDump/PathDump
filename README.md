@@ -16,7 +16,7 @@ PathDump
 ```
 |-- controller
 |-- host
-|-- exmaples
+|-- examples
 |-- lib
 |-- conf
 |-- README.md
