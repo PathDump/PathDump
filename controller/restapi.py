@@ -18,7 +18,6 @@ def get(server,data,GETURL):
     method = 'GET',
     headers={'Content-Type' : 'application/json'},
     body=data)
-    print resp
     return resp,content
 
 

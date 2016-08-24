@@ -18,25 +18,23 @@ def index():
 def not_found(error):
     return make_response(json.dumps({'error': 'Not found'}), 404)
 
-@app.route('/mapreduce',methods=['POST'])
-def getmapreducepost():
+@app.route('/pathdump',methods=['POST'])
+def getpathdumppost():
     if not request.json or not 'api' in request.json:
         abort(404)
     else:
-        content=pq.handlerequest(request.json,"mapreduce")
+        content=pq.handlerequest(request.json,"pathdump")
         return content
 
-@app.route('/mapreduce',methods=['GET'])
-def getmapreduceget():
+@app.route('/pathdump',methods=['GET'])
+def getpathdumpget():
     if not request.json or not 'api' in request.json:
         abort(404)
     else:
-        content=pq.handlerequest(request.json,"mapreduce")
+        content=pq.handlerequest(request.json,"pathdump")
         return content
 
 
 if __name__ == '__main__':
     ip = "0.0.0.0"
     app.run(debug=True,host=ip)
-
-

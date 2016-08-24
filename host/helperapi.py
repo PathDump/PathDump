@@ -95,7 +95,7 @@ def wrapper (func, args, results):
     results.append (func (*args))
 
 def processTIB (source, collection):
-    print "rec app call"
+    print "rec app call:", source
     module = imp.load_source ('', source['path'])
     # module must implement 'run' function
     return module.run (source['argv'], collection)
@@ -114,4 +114,4 @@ def httpcmd (node, api, tree, query, aggcode=None, interval=None):
     if interval:
         reqbody.update ({'interval': interval})
 
-    return restapi.post(node, json.dumps (reqbody), "mapreduce")
+    return restapi.post(node, json.dumps (reqbody), "pathdump")

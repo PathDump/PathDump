@@ -21,7 +21,8 @@ def getFlows (linkID, timeRange):
     data_fltr = helper.doAndFilters ([link_fltr, stime_fltr, etime_fltr])
 
     proj_fltr = {'sip': 1, 'sport': 1, 'dip': 1, 'dport': 1, 'proto': 1,
-                 'path': 1, '_id': 0}
+                 'path': 1, 'bytes': 1, 'pkts': 1, 'start': 1, 'end': 1,
+                 '_id': 0}
     if data_fltr == '':
         cursor = collection.find (None, proj_fltr)
     else:
@@ -35,6 +36,10 @@ def getFlows (linkID, timeRange):
         flow['flowid']['dport'] = f['dport']
         flow['flowid']['proto'] = f['proto']
         flow['path'] = f['path']
+        flow['bytes'] = f['bytes']
+        flow['pkts'] = f['pkts']
+        flow['start'] = (f['start'] - datetime(1970,1,1)).total_seconds()
+        flow['end'] = (f['end'] - datetime(1970,1,1)).total_seconds()
         # pprint (flow)
         flows.append (flow)
 
@@ -62,6 +67,9 @@ def getPaths (flowID, linkID, timeRange):
     return paths
 
 def getCount (Flow, timeRange):
+    if Flow['bytes'] and Flow['pkts']:
+        return (Flow['bytes'], Flow['pkts'])
+
     (sip_fltr, sport_fltr, dip_fltr, dport_fltr, proto_fltr) = \
         helper.buildFlowidFilter (Flow['flowid'])
     path_fltr = helper.buildPathFilter (Flow['path'])
@@ -84,7 +92,7 @@ def getCount (Flow, timeRange):
         bytec += c['bytes']
         pktc += c['pkts']
 
-    print bytec, pktc
+    # print bytec, pktc
     return (bytec, pktc)
 
 def getDuration (Flow, timeRange):
@@ -120,18 +128,16 @@ def postFlow (flowID, Reason, Paths):
 
 def execQuery (Tree, Query, AggCode=None):
     global query_results
-    workers=[]
 
     cur = helper.getCurNodeID ()
-    print 'CurNodeID:', cur
-    # the current node is a leaf node
+
+    # if the current node is a leaf node, get data from database
     if len (Tree[cur]['child']) == 0:
-        # get data from database
-        print "leaf:", datetime.now()
         return helper.processTIB (Query, collection)
 
     # From now on, the following handles when the current node is a relay node
 
+    workers=[]
     # 1) create a worker thread at the current node
     t = Thread (target = helper.wrapper,
                 args = (helper.processTIB, (deepcopy(Query), collection,),
@@ -173,9 +179,7 @@ def execQuery (Tree, Query, AggCode=None):
 
     # reset variables 
     query_results = []
-    workers = [] # <- is this necessary?
 
-    print datetime.now ()
     return output
 
 def installQuery (Tree, Query, Interval):

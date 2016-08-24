@@ -6,7 +6,7 @@ from flask import request
 import pathdumpapi as pdapi
 import json
 import sys
-# import mapreduce as mr
+# import pathdump as mr
 
 app = Flask(__name__)
 @app.route('/')
@@ -14,8 +14,8 @@ def index():
     return "Hello, World" 
 
 
-@app.route('/mapreduce',methods=['POST'])
-def getmapreducepost():
+@app.route('/pathdump',methods=['POST'])
+def getpathdumppost():
     if not request.json or not 'api' in request.json:
         abort (404)
     else:
@@ -46,8 +46,8 @@ def getmapreducepost():
         # content=mr.distquery(request.json)
         # return content
 
-@app.route('/mapreduce',methods=['GET'])
-def getmapreduceget():
+@app.route('/pathdump',methods=['GET'])
+def getpathdumpget():
     # MLEE: parsing of request should be done here
     #       then, correct API should be called
     #

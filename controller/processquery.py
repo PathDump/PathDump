@@ -1,20 +1,19 @@
 import restapi as r
 import json
 import threading
-from datetime import datetime
 
 results=[]
 
-def wrapper(func,args,results):
-    results.append(func(*args))
+def wrapper (func, args, results):
+    results.append ( func (*args) )
 
-def httpcmd(server,req,url):
-    req=json.loads(req)
-    return r.get(server,json.dumps(req),url)
+def httpcmd (server, req, url):
+    req = json.loads (req)
+    return r.get (server, json.dumps(req), url)
 
-def handlerequest(req,url):
+def handlerequest (req, url):
     global results
-    workers=[]
+    workers = []
     tree = req['tree']
     for child in tree['controller']['child']:
         t = threading.Thread (target = wrapper, args = (httpcmd,
@@ -32,6 +31,8 @@ def handlerequest(req,url):
     data = []
     for res in results:
         resp, content = res
-        data += json.loads (content)
+        if resp['status'] == '200':
+            data += json.loads (content)
+
     results = []
     return json.dumps (data)
