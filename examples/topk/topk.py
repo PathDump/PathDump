@@ -1,60 +1,27 @@
-from datetime import datetime, timedelta
-import json
-import restapi as r
-import argparse
-from time import sleep
-import os
-import random
-import math
-import sys
-from pprint import pprint
-
-parser=argparse.ArgumentParser(description="container sample example")
-parser.add_argument('--topk',dest="topk",default=10,help="top k value")
-parser.add_argument('--run',dest="run",default="topk",help="run topk")
-
-args=parser.parse_args()
-controller="0.0.0.0"
-
-def gettopk(topk, body):
-    data=json.dumps (body)
-    resp,content = r.get (controller, data, "mapreduce")
-    content=json.loads(content)
-
-    output = aggregate (topk, content)
-    return output
-
-def createTopKBody (api, tree, query, aggcode):
-    reqbody = {'api': api}
-    reqbody.update ({'tree': tree})
-    reqbody.update ({'query': query})
-    if aggcode:
-        reqbody.update ({'aggcode': aggcode})
-    return reqbody
+import ctrlapi as capi
+import heapq
 
 def aggregate (topk, data):
-    children_dict={}
-    for entry in data:
-        children_dict.update(entry)
-    sorted_flows = sorted(children_dict.iteritems(), key=lambda (k, v): (-v, k))[:topk]
+    h = []
+    for bytec, flow in data:
+        if len (h) < topk or bytec > h[0][0]:
+            if len (h) == topk: heapq.heappop (h)
+            heapq.heappush (h, (bytec, flow))
+    return h
 
-    topk_dict={}
-    for k,v in sorted_flows:
-        topk_dict.update({k:v})
-    return topk_dict
-
-if args.run=="topk":
-    api = 'execQuery'
+if __name__ == "__main__":
     tree = {'controller': {'parent': 'controller', 'child': ["172.17.0.3"]},
             '172.17.0.3': {'parent': 'controller', 'child': ['172.17.0.4', '172.17.0.5']},
             '172.17.0.4': {'parent': '172.17.0.3', 'child': []},
             '172.17.0.5': {'parent': '172.17.0.3', 'child': []}}
     topk = 10
-    query = {'path': 'apps/topk.py', 'argv': [topk]}
-    aggcode =  {'path': 'apps/topk_agg.py', 'argv': [topk]}
-    reqbody = createTopKBody (api, tree, query, aggcode)
+    linkID = ('*', '*')
+    timeRange = ('*', '*')
+    query = {'path': 'apps/topk_query.py', 'argv': [topk, linkID, timeRange]}
+    aggcode =  {'path': 'apps/topk_query_agg.py', 'argv': [topk]}
 
-    content = gettopk (topk, reqbody)
+    data = capi.execQuery (tree, query, aggcode)
 
-    for key, val in content.items():
-        print key, val 
+    output = aggregate (topk, data)
+    for bytec, flow in output:
+        print 'flowid:', flow['flowid'], 'path:', flow['path'], 'bytes:', bytec

@@ -1,20 +1,16 @@
-from pymongo import MongoClient
-import pymongo
-from datetime import datetime
+import pathdumpapi as pdapi
+import heapq
 
 def run (argv, coll):
+    h = []
     topk = argv[0]
-    pdata={}
-    count=0
-    pipeline = [ {"$sort": {"bytes": -1}}, {"$limit": topk} ]
-    for res in coll.aggregate (pipeline):
-        # pdata.update({res["id"]+uniq_id+"_"+str(count): res["bytes"]})
-        key = res["id"] + "_" + "_".join (res['path'])  + "_" + str(count)
-        pdata.update({key: res["bytes"]})
-        count +=1
-    print "len of topk dict before reduce:", len(pdata)
+    linkID = argv[1]
+    timeRange = argv[2]
 
-    odata=[]
-    # odata.append({'topk': pdata})
-    odata.append(pdata)
-    return odata
+    flows = pdapi.getFlows (linkID, timeRange)
+    for flow in flows:
+        (bytec, pktc) = pdapi.getCount (flow, timeRange)
+        if len (h) < topk or bytec > h[0][0]:
+            if len (h) == topk: heapq.heappop (h)
+            heapq.heappush (h, (bytec, flow))
+    return h
