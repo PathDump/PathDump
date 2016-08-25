@@ -126,17 +126,16 @@ def getDuration (Flow, timeRange):
 def postFlow (flowID, Reason, Paths):
     return True
 
+'''
 def execQuery (Tree, Query, AggCode=None):
     global query_results
 
     cur = helper.getCurNodeID ()
-
     # if the current node is a leaf node, get data from database
     if len (Tree[cur]['child']) == 0:
         return helper.processTIB (Query, collection)
 
     # From now on, the following handles when the current node is a relay node
-
     workers=[]
     # 1) create a worker thread at the current node
     t = Thread (target = helper.wrapper,
@@ -181,6 +180,7 @@ def execQuery (Tree, Query, AggCode=None):
     query_results = []
 
     return output
+'''
 
 def installQuery (Tree, Query, Interval):
     return True
@@ -191,6 +191,83 @@ def uninstallQuery (Tree, Query):
 def getPoorTCPFlows (freq):
     flowID = ''
     return flowID
+
+def handleLeafNode (req):
+    if req['api'] == 'execQuery':
+        query    = req['query']
+        return helper.processTIB (query, collection)
+    elif req['api'] == 'check_source':
+        name     = req['name'] 
+        checksum = req['checksum'] 
+        output = helper.checkSource (name, checksum)
+        print output
+        return output
+
+def getThreadArgument (local, req, node=None):
+    if local:
+        api = req['api']
+        if api == 'execQuery':
+            query   = req['query']
+            return (helper.processTIB, (query, collection))
+        elif api == 'check_source':
+            name     = req['name']
+            checksum = req['checksum']
+            return (helper.checkSource, (name, checksum))
+    else:
+        return (helper.httpcmd, (node, req))
+
+def handleRequest (req):
+    global query_results
+
+    Tree = req['tree']
+    cur = helper.getCurNodeID ()
+    if len (Tree[cur]['child']) == 0:
+        return handleLeafNode (req)
+
+    # From now on, the following handles when the current node is a relay node
+    workers = []
+    # 1) create a worker thread at the current node
+    (func, argv) = getThreadArgument (True, req)
+    t = Thread (target = helper.wrapper, args = (func, argv, query_results))
+    workers.append (t)
+
+    # 2) deliver query to child nodes
+    for child in Tree[cur]['child']: 
+        print "calling:", child
+        (func, argv) = getThreadArgument (False, req, child)
+        # further optimization (should be implemented): construct a subtree for
+        # each child and pass it on to the httpcmd as argument
+        t = Thread (target = helper.wrapper, args = (func, argv,
+                                                     query_results))
+        workers.append (t)
+
+    # 3) start workers
+    for worker in workers:
+        worker.start()
+
+    # 4) wait for workers finishes -> this part might be hung forever
+    for worker in workers:
+        worker.join()
+
+    print "11111111111111111111111111111111"
+    data=[]
+    for res in query_results:
+        if len(res) > 0 and type(res) == type(()) and 'content-type' in res[0]:
+            resp, content = res
+            content = json.loads (content)
+        else:
+            content = res
+
+        data += content
+    print "22222222222222222222222222222222"
+    # reset variables 
+    query_results = []
+
+    if req['api'] == 'execQuery' and 'aggcode' in req:
+        # 4) process collected data using AggCode
+        return helper.processCollectedData (req['aggcode'], data)
+    else:
+        return data
 
 # linkID = ('*', '16')
 # timeRange = ('*', datetime.datetime(2015, 11, 9, 19, 10, 32, 765000))

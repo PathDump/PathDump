@@ -1,6 +1,8 @@
 import restapi as r
 import json
 import threading
+import confparser as cp
+import os
 
 results=[]
 
@@ -12,6 +14,14 @@ def httpcmd (server, req, url):
     return r.get (server, json.dumps(req), url)
 
 def handlerequest (req, url):
+    if req['api'] == 'check_source':
+        print type (req), req
+        md5file = req['name'] + '.md5'
+        req.update ({'checksum': load_file (md5file)})
+
+    return execRequest (req, url)
+
+def execRequest (req, url):
     global results
     workers = []
     tree = req['tree']
@@ -36,3 +46,8 @@ def handlerequest (req, url):
 
     results = []
     return json.dumps (data)
+
+def load_file (filename):
+    filepath = os.getcwd() + '/' + cp.options['repository'] + '/' + filename
+    with open (filepath, 'r') as f:
+        return f.read()

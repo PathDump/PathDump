@@ -7,28 +7,34 @@ from datetime import datetime
 #import grequests
 
 #s = FuturesSession(executor=ThreadPoolExecutor(max_workers=30))
-port="5000"
-h = httplib2.Http(".cache")
+port = "5000"
+h = httplib2.Http (".cache")
 
 
-def get(server,data,GETURL):
-    url="http://"+server+":"+port+"/"+GETURL
-    resp,content = h.request(
-    uri = url,
-    method = 'GET',
-    headers={'Content-Type' : 'application/json'},
-    body=data)
+def get (server, data, GETURL):
+    url="http://" + server + ":" + port + "/" + GETURL
+    resp, content = h.request (uri = url,
+                               method = 'GET',
+                               headers={'Content-Type' : 'application/json'},
+                               body=data)
     return resp,content
 
 
-def post(server,data,POSTURL):
-    url="http://"+server+":"+port+"/"+POSTURL
-    resp,content = h.request(
-    uri = url,
-    method = 'POST',
-    headers={'Content-Type' : 'application/json'},
-    body=data)
-    return resp,content
+def post (server, data, POSTURL):
+    url = "http://" + server + ":" + port + "/" + POSTURL
+    resp, content = h.request (uri = url,
+                               method = 'POST',
+                               headers = {'Content-Type' : 'application/json'},
+                               body = data)
+    return resp, content
+
+def upload_textfile (server, data, POSTURL):
+    url = "http://" + server + ":" + port + "/" + POSTURL
+    resp, content = h.request (uri = url,
+                               method = 'POST',
+                               headers = {'Content-Type': 'text/plain'},
+                               body = data)
+    return resp, content
 
 '''def post_asycreq(server,data,POSTURL):
     url="http://"+server+":"+port+"/"+POSTURL

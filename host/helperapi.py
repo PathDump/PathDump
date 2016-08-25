@@ -2,6 +2,8 @@ import imp
 import restapi
 import netifaces as ni
 import json
+import confparser as cp
+import os
 
 def buildFlowidFilter (flowID):
     sip_filter = ''
@@ -95,23 +97,28 @@ def wrapper (func, args, results):
     results.append (func (*args))
 
 def processTIB (source, collection):
-    print "rec app call:", source
-    module = imp.load_source ('', source['path'])
+    print "processTIB call:", source
+    filepath = cp.options['repository'] + '/' + source['name']
+    module = imp.load_source ('', filepath)
     # module must implement 'run' function
     return module.run (source['argv'], collection)
 
 def processCollectedData (source, data):
-    module = imp.load_source ('', source['path'])
+    filepath = cp.options['repository'] + '/' + source['name']
+    module = imp.load_source ('', filepath)
     # module must implement 'run' function
     return module.run (source['argv'], data)
 
-def httpcmd (node, api, tree, query, aggcode=None, interval=None):
-    reqbody = {'api': api}
-    reqbody.update ({'tree': tree})
-    reqbody.update ({'query': query})
-    if aggcode:
-        reqbody.update ({'aggcode': aggcode})
-    if interval:
-        reqbody.update ({'interval': interval})
+def httpcmd (node, req):
+    return restapi.post (node, json.dumps (req), "pathdump")
 
-    return restapi.post(node, json.dumps (reqbody), "pathdump")
+def checkSource (name, checksum):
+    filepath = os.getcwd() + '/' + cp.options['repository'] + '/' + name
+    md5fpath = filepath + '.md5'
+    
+    with open (md5fpath, 'r') as f:
+        chksum = f.read()
+    if not os.path.exists (filepath) or chksum != checksum:
+        return [{getCurNodeID (): False}]
+    else:
+        return [{getCurNodeID (): True}]
