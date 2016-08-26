@@ -28,14 +28,6 @@ def post (server, data, POSTURL):
                                body = data)
     return resp, content
 
-def upload_textfile (server, data, POSTURL):
-    url = "http://" + server + ":" + port + "/" + POSTURL
-    resp, content = h.request (uri = url,
-                               method = 'POST',
-                               headers = {'Content-Type': 'text/plain'},
-                               body = data)
-    return resp, content
-
 '''def post_asycreq(server,data,POSTURL):
     url="http://"+server+":"+port+"/"+POSTURL
     #req = Request('POST',  url,

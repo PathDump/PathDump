@@ -1,9 +1,12 @@
+import os
 import imp
+import json
 import restapi
 import netifaces as ni
-import json
 import confparser as cp
-import os
+import pathdumpapi as pdapi
+
+cwd = os.getcwd()
 
 def buildFlowidFilter (flowID):
     sip_filter = ''
@@ -80,15 +83,6 @@ def doAndFilters (filters):
     else:
         return ret_fltr
 
-def isSamePath (p1, p2):
-    if len(p1) != len(p2):
-        return False
-    for i in range(0, len(p1)):
-        if p1[i] != p2[i]:
-            return False
-
-    return True
-
 # returns an IP address as Node ID
 def getCurNodeID ():
     return ni.ifaddresses('eth0')[2][0]['addr']
@@ -97,7 +91,6 @@ def wrapper (func, args, results):
     results.append (func (*args))
 
 def processTIB (source, collection):
-    print "processTIB call:", source
     filepath = cp.options['repository'] + '/' + source['name']
     module = imp.load_source ('', filepath)
     # module must implement 'run' function
@@ -113,12 +106,58 @@ def httpcmd (node, req):
     return restapi.post (node, json.dumps (req), "pathdump")
 
 def checkSource (name, checksum):
-    filepath = os.getcwd() + '/' + cp.options['repository'] + '/' + name
+    filepath = cwd + '/' + cp.options['repository'] + '/' + name
     md5fpath = filepath + '.md5'
-    
-    with open (md5fpath, 'r') as f:
-        chksum = f.read()
-    if not os.path.exists (filepath) or chksum != checksum:
-        return [{getCurNodeID (): False}]
+    try:
+        with open (md5fpath, 'r') as f:
+            chksum = f.read()
+        if not os.path.exists (filepath) or chksum != checksum:
+            return [{getCurNodeID(): False}]
+        else:
+            return [{getCurNodeID(): True}]
+    except IOError:
+        return [{getCurNodeID(): False}]
+
+def saveSource (name, checksum, filedata):
+    filepath = cwd + '/' + cp.options['repository'] + '/' + name
+    md5fpath = filepath + '.md5'
+    try:
+        with open (filepath, 'w') as f:
+            f.write (filedata)
+        with open (md5fpath, 'w') as f:
+            f.write (checksum)
+        return [{getCurNodeID(): True}]
+    except IOError:
+        return [{getCurNodeID(): False}]
+
+def handleLeafNode (req):
+    if req['api'] == 'execQuery':
+        query    = req['query']
+        return processTIB (query, pdapi.collection)
+    elif req['api'] == 'check_source':
+        name     = req['name'] 
+        checksum = req['checksum'] 
+        return checkSource (name, checksum)
+    elif req['api'] == 'send_source':
+        name     = req['name'] 
+        checksum = req['checksum']
+        filedata = req['file']
+        return saveSource (name, checksum, filedata)
+
+def getThreadArgument (local, req, node=None):
+    if local:
+        api = req['api']
+        if api == 'execQuery':
+            query   = req['query']
+            return (processTIB, (query, pdapi.collection))
+        elif api == 'check_source':
+            name     = req['name']
+            checksum = req['checksum']
+            return (checkSource, (name, checksum))
+        elif api == 'send_source':
+            name     = req['name'] 
+            checksum = req['checksum']
+            filedata = req['file']
+            return (saveSource, (name, checksum, filedata))
     else:
-        return [{getCurNodeID (): True}]
+        return (httpcmd, (node, req))

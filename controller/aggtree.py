@@ -2,6 +2,7 @@
 import random
 import json
 from pprint import pprint
+import sys
 
 def buildGroupTree (filename):
     gtree = {}
@@ -12,9 +13,8 @@ def buildGroupTree (filename):
     for group in data:
         gid      = group ['gid']
         gtree[gid]          = {}
-        gtree[gid]['host']  = group['host']
+        gtree[gid]['host'] = group['host']
         gtree[gid]['child'] = group['child']
-
     return gtree
 
 def initTreeNode (tree, cur, parent):
@@ -47,19 +47,21 @@ def buildAggTree (tree, parent, cur, gtree, gtcur):
         gtchild = tnode['gtchild'][i]
         buildAggTree (tree, cur, child, gtree, gtchild)
 
-
-def cleanUpMetaData (tree):
+def cleanupMetaData (tree):
     for v in tree.itervalues():
         del v['gtchild']
 
-random.seed(1)
-tree = {}
-gtree = buildGroupTree ('grouptree.json')
-buildAggTree (tree, 'controller', 'controller', gtree, 'controller')
-cleanUpMetaData (tree)
+if __name__ == '__main__':
+    random.seed(1)
+    tree = {}
 
-data = json.dumps(tree)
-pprint (tree)
-print '----'
-pprint (data)
+    gtree = buildGroupTree (sys.argv[1])
+    buildAggTree (tree, 'controller', 'controller', gtree, 'controller')
+
+    cleanupMetaData (tree)
+
+    data = json.dumps(tree)
+    pprint (tree)
+    print '----'
+    pprint (data)
 

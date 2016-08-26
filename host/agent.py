@@ -1,13 +1,15 @@
-#!flask/bin/python
 from flask import Flask
 from flask import make_response
 from flask import abort
 from flask import request
-import pathdumpapi as pdapi
+from threading import Thread
 import json
 import sys
-import confparser as cp
 import os
+import helperapi as helper
+import confparser as cp
+
+query_results = []
 
 app = Flask(__name__)
 @app.route('/')
@@ -15,99 +17,71 @@ def index():
     return "Hello, World" 
 
 
-@app.route('/pathdump',methods=['POST'])
+@app.route('/pathdump', methods=['POST'])
 def getpathdumppost():
     if not request.json or not 'api' in request.json:
         abort (404)
     else:
-        output = pdapi.handleRequest (request.json)
+        output = handleRequest (request.json)
         return json.dumps (output)
-        '''
-        if request.json['api'] == 'execQuery':
-            aggtree = request.json['tree']
-            query   = request.json['query']
-            aggcode = request.json['aggcode']
-            print '\n\n\nPOST'
-            print aggtree
-            print '------'
-            print query
-            print '------'
-            print aggcode
-            output = pdapi.execQuery (aggtree, query, aggcode)
-            return json.dumps (output)
-        elif request.json['api'] == 'installQuery':
-            aggtree = request.json['tree']
-            query    = request.json['query']
-            interval = request.json['interval']
-            return pdapi.installQuery (aggtree, query, interval)
-        elif request.json['api'] == 'uninstallQuery':
-            aggtree = request.json['tree']
-            query    = request.json['query']
-            return pdapi.uninstallQuery (aggtree, query)
-        elif request.json['api'] == 'check_source':
-            aggtree = request.json['tree']
-            name = request.json['name'] 
-            checksum = request.json['checksum'] 
-            output = helper.checkSource (aggtree, name, checksum)
-            return json.dumps (output)    
-        else:
-            abort (404)
-        '''
 
-@app.route('/pathdump',methods=['GET'])
+@app.route('/pathdump', methods=['GET'])
 def getpathdumpget():
-    # MLEE: parsing of request should be done here
-    #       then, correct API should be called
-    #
-    #       request json format example 1
-    #       {'api': 'execQuery'}
-    #       {'tree': {...}}
-    #       {'query': {'name': 'topk_query.py',
-    #                  'argv': [1000]}}
-    #       {'aggcode': {'name': 'topk_query_agg.py',
-    #                  'argv': [1000]}}
-    #
-    #       request json format example 2
-    #       {'api': 'installQuery'}
-    #       {'tree': {...}}
-    #       {'query': {'name': 'topk_query.py',
-    #                  'argv': [1000]}}
-    #       {'interval': 0.1}
-    #
-    #       request json format example 3
-    #       {'api': 'uninstallQuery'}
-    #       {'query': {'name': 'topk_query.py',
-    #                  'checksum': 'eea7d80064c3c1d9374e2897ccd69a98'}}
     if not request.json or not 'api' in request.json:
         abort (404)
     else:
-        output = pdapi.handleRequest (request.json)
+        output = handleRequest (request.json)
         return json.dumps (output)
-        '''
-        if request.json['api'] == 'execQuery':
-            aggtree = request.json['tree']
-            query   = request.json['query']
-            aggcode = request.json['aggcode']
-            print '\n\n\n'
-            print aggtree
-            print '------'
-            print query
-            print '------'
-            print aggcode
-            output = pdapi.execQuery (aggtree, query, aggcode)
-            return json.dumps (output)
-        elif request.json['api'] == 'installQuery':
-            aggtree = request.json['tree']
-            query    = request.json['query']
-            interval = request.json['interval']
-            return pdapi.installQuery (aggtree, query, interval)
-        elif request.json['api'] == 'uninstallQuery':
-            aggtree = request.json['tree']
-            query    = request.json['query']
-            return pdapi.uninstallQuery (aggtree, query)
+
+def handleRequest (req):
+    global query_results
+
+    Tree = req['tree']
+    cur = helper.getCurNodeID ()
+    if len (Tree[cur]['child']) == 0:
+        return helper.handleLeafNode (req)
+
+    # From now on, the following handles when the current node is a relay node
+    workers = []
+    # 1) create a worker thread at the current node
+    (func, argv) = helper.getThreadArgument (True, req)
+    t = Thread (target = helper.wrapper, args = (func, argv, query_results))
+    workers.append (t)
+
+    # 2) deliver query to child nodes
+    for child in Tree[cur]['child']: 
+        print "calling:", child
+        (func, argv) = helper.getThreadArgument (False, req, child)
+        # further optimization (should be implemented): construct a subtree for
+        # each child and pass it on to the httpcmd as argument
+        t = Thread (target = helper.wrapper, args = (func, argv,
+                                                     query_results))
+        workers.append (t)
+
+    # 3) start workers
+    for worker in workers:
+        worker.start()
+
+    # 4) wait for workers finishes -> this part might be hung forever
+    for worker in workers:
+        worker.join()
+
+    data=[]
+    for res in query_results:
+        if len(res) > 0 and type(res) == type(()) and 'content-type' in res[0]:
+            resp, content = res
+            content = json.loads (content)
         else:
-            abort (404)
-        '''
+            content = res
+        data += content
+    # reset variables 
+    query_results = []
+
+    if req['api'] == 'execQuery' and 'aggcode' in req:
+        # 4) process collected data using AggCode
+        return helper.processCollectedData (req['aggcode'], data)
+    else:
+        return data
 
 def initialize ():
     options = None
@@ -123,4 +97,4 @@ def initialize ():
 
 if __name__ == '__main__':
     initialize ()
-    app.run(debug=True,host="0.0.0.0")
+    app.run (debug = True, host = "0.0.0.0")

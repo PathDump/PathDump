@@ -17,8 +17,8 @@ if __name__ == "__main__":
     topk = 10
     linkID = ('*', '*')
     timeRange = ('*', '*')
-    query = {'path': 'apps/topk_query.py', 'argv': [topk, linkID, timeRange]}
-    aggcode =  {'path': 'apps/topk_query_agg.py', 'argv': [topk]}
+    query = {'name': 'topk_query.py', 'argv': [topk, linkID, timeRange]}
+    aggcode =  {'name': 'topk_query_agg.py', 'argv': [topk]}
 
     data = capi.execQuery (tree, query, aggcode)
 
