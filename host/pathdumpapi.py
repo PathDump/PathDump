@@ -2,6 +2,7 @@ from pymongo import MongoClient
 import pymongo
 from datetime import datetime
 import helperapi as helper
+import confparser as cp
 
 client=MongoClient('localhost', 27017)
 database=client['pathdump']
@@ -109,7 +110,11 @@ def getDuration (Flow, timeRange):
     return delta.total_seconds()
 
 def postFlow (flowID, Reason, Paths):
-    return True
+    req = {'api': 'postFlow'}
+    req.update ({'fid': flowID})
+    req.update ({'reason': Reason})
+    req.update ({'paths': Paths})
+    return helper.httpcmd (cp.options['controller'], req)
 
 def installQuery (Tree, Query, Interval):
     return True

@@ -50,7 +50,6 @@ def handleRequest (req):
 
     # 2) deliver query to child nodes
     for child in Tree[cur]['child']: 
-        print "calling:", child
         (func, argv) = helper.getThreadArgument (False, req, child)
         # further optimization (should be implemented): construct a subtree for
         # each child and pass it on to the httpcmd as argument
@@ -62,7 +61,7 @@ def handleRequest (req):
     for worker in workers:
         worker.start()
 
-    # 4) wait for workers finishes -> this part might be hung forever
+    # 4) wait unitl workers finish -> this part might be hung forever
     for worker in workers:
         worker.join()
 
@@ -94,6 +93,9 @@ def initialize ():
     # create app repository if it doesn't exist
     if not os.path.exists (cp.options['repository']):
         os.makedirs (cp.options['repository'])
+
+    if 'controller' not in cp.options:
+        sys.exit ("No controller IP address!")
 
 if __name__ == '__main__':
     initialize ()

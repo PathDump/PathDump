@@ -37,7 +37,26 @@ def execQuery (tree, query, aggcode=None):
 
     req = buildReq ('execQuery', tree, query, aggcode)
     resp, content = r.get (controller, json.dumps (req), "pathdump")
-    # resp = {'status': '300'}
+    if resp['status'] != '200':
+        return []
+    else:
+        return json.loads (content)
+
+def installQuery (tree, query, interval):
+    hosts = check_source (tree, query['name'])
+    if send_source (hosts, tree, query['name']) == False:
+        return []
+
+    req = buildReq ('installQuery', tree, query, None, interval)
+    resp, content = r.get (controller, json.dumps (req), "pathdump")
+    if resp['status'] != '200':
+        return []
+    else:
+        return json.loads (content)
+
+def uninstallQuery (tree, query):
+    req = buildReq ('uninstallQuery', tree, query)
+    resp, content = r.get (controller, json.dumps (req), "pathdump")
     if resp['status'] != '200':
         return []
     else:

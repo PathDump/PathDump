@@ -5,8 +5,12 @@ import restapi
 import netifaces as ni
 import confparser as cp
 import pathdumpapi as pdapi
+from threading import Thread
+import time
 
 cwd = os.getcwd()
+
+instQueries = {}
 
 def buildFlowidFilter (flowID):
     sip_filter = ''
@@ -130,6 +134,49 @@ def saveSource (name, checksum, filedata):
     except IOError:
         return [{getCurNodeID(): False}]
 
+def schedQuery (qname, interval, func, args):
+    global instQueries
+
+    while qname in instQueries and instQueries[qname]:
+        time.sleep (interval)
+        if not instQueries[qname]:
+            break
+        result = func (*args)
+        print result
+
+    # remove query because uninstallQuery was executed
+    if qname in instQueries:
+        del instQueries[qname]
+
+def installQuery (query, interval):
+    global instQueries
+
+    qname = query['name']
+
+    # the query is already installed
+    if qname in instQueries:
+        return [{getCurNodeID(): False}]
+
+    instQueries[qname] = True
+    if interval > 0.0:
+        t = Thread (target = schedQuery, args = (qname, interval, processTIB,
+                                                 (query, pdapi.collection)))
+        t.start()
+    else:
+        # NEED TO BE HANDLED LATER
+        # data should be a stream of TIB records being exported from memory
+        return [{getCurNodeID(): True}]
+    return [{getCurNodeID(): True}]
+
+def uninstallQuery (qname):
+    global instQueries
+
+    # no need for tight synchronization, so no locking mechanism is implemented
+    if qname in instQueries:
+        instQueries[qname] = False
+
+    return [{getCurNodeID(): True}]
+
 def handleLeafNode (req):
     if req['api'] == 'execQuery':
         query    = req['query']
@@ -143,6 +190,13 @@ def handleLeafNode (req):
         checksum = req['checksum']
         filedata = req['file']
         return saveSource (name, checksum, filedata)
+    elif req['api'] == 'installQuery':
+        query    = req['query']
+        interval = req['interval']
+        return installQuery (query, interval)
+    elif req['api'] == 'uninstallQuery':
+        qname    = req['query']['name']
+        return uninstallQuery (qname)
 
 def getThreadArgument (local, req, node=None):
     if local:
@@ -159,5 +213,12 @@ def getThreadArgument (local, req, node=None):
             checksum = req['checksum']
             filedata = req['file']
             return (saveSource, (name, checksum, filedata))
+        elif req['api'] == 'installQuery':
+            query    = req['query']
+            interval = req['interval']
+            return (installQuery, (query, interval))
+        elif req['api'] == 'uninstallQuery':
+            qname    = req['query']['name']
+            return (uninstallQuery, (qname,))
     else:
         return (httpcmd, (node, req))

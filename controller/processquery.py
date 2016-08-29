@@ -21,6 +21,15 @@ def handlerequest (req, url):
         req.update ({'file': load_file (srcfile)})
         md5file = srcfile + '.md5'
         req.update ({'checksum': load_file (md5file)})
+   # This api should be called only from queries installed in host 
+    elif req['api'] == 'postFlow':
+        # TODO: NEED TO BE IMPLEMENTED
+        return json.dumps ([{'controller': True}])
+   # This api should be called only from queries installed in host 
+    elif req['api'] == 'postResult':
+        print req['result']
+        # TODO: NEED TO BE IMPLEMENTED
+        return json.dumps ([{'controller': True}])
 
     return execRequest (req, url)
 
