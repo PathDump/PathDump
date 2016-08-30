@@ -116,12 +116,6 @@ def postFlow (flowID, Reason, Paths):
     req.update ({'paths': Paths})
     return helper.httpcmd (cp.options['controller'], req)
 
-def installQuery (Tree, Query, Interval):
-    return True
-
-def uninstallQuery (Tree, Query):
-    return True
-
 def getPoorTCPFlows (freq):
     flowID = ''
     return flowID
