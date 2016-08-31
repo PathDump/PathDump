@@ -3,6 +3,7 @@ import pymongo
 from datetime import datetime
 import helperapi as helper
 import confparser as cp
+import tcpmon
 
 client=MongoClient('localhost', 27017)
 database=client['pathdump']
@@ -117,8 +118,21 @@ def postFlow (flowID, Reason, Paths):
     return helper.httpcmd (cp.options['controller'], req)
 
 def getPoorTCPFlows (freq):
-    flowID = ''
-    return flowID
+    tcpmon.init()
+    poorFlows = tcpmon.updatePoorFlows (freq)
+    flowIDs = []
+    for fid in poorFlows:
+        tokens = fid.split (':')
+        if len (fields) != 5:
+            continue
+        flowid = {}
+        flowid['sip']   = tokens[0]
+        flowid['sport'] = tokens[1]
+        flowid['dip']   = tokens[2]
+        flowid['dport'] = tokens[3]
+        flowid['proto'] = tokens[4]
+        flowIDs.append (flowid)
+    return flowIDs
 
 # linkID = ('*', '16')
 # timeRange = ('*', datetime.datetime(2015, 11, 9, 19, 10, 32, 765000))
