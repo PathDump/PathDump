@@ -176,7 +176,6 @@ string getDateString(struct timeval *tv)
 int insert_db(conn_it e,mongo::DBClientConnection *cdb){
     
     mongo::BSONObjBuilder b;
-    mongo::BSONArrayBuilder a;
     struct timeval c;
     char buff[10];
     string sip,dip,sport,dport,proto,id;
