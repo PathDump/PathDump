@@ -35,17 +35,21 @@ PathDump
 |-- README.md
 |-- LICENSE
 ```
-### Mongodb build instructions 
-# Download mongo-cxx-driver-legacy-1.1.2.zip 
+
+## Mongodb build instructions 
+* Download mongo-cxx-driver-legacy-1.1.2.zip 
+```
 unzip mongo-cxx-driver-legacy-1.1.2.zip 
 cd mongo-cxx-driver
 sudo scons --prefix /usr/local --c++11=on install
+```
 
-### Yaml build and install instruction
+## Yaml build and install instruction
+```
 git clone https://github.com/jbeder/yaml-cpp.git
 mkdir build
 cd build/
 cmake ..
 make
 sudo make install
-
+```
