@@ -1,5 +1,4 @@
 import httplib2
-import json
 
 port="5000"
 h = httplib2.Http(".cache")

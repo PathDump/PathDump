@@ -2,7 +2,7 @@ from subprocess import Popen, PIPE
 from threading import Thread, Lock
 import os
 import signal
-from helperapi import cwd
+import helperapi
 import time
 
 proc = None
@@ -17,7 +17,7 @@ def init():
         candidates = {}
         mon_flows={}
         stop_flag = False
-        cmd = cwd + '/tcpretrans'
+        cmd = helperapi.cwd + '/tcpretrans'
         proc = Popen ([cmd, ''], stdout = PIPE, bufsize = 1)
         t = Thread (target = monitor_retransmit, args = ())
         t.start()

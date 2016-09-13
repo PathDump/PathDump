@@ -52,9 +52,14 @@ def getPaths (flowID, linkID, timeRange):
         cursor = collection.find (None, proj_fltr)
     else:
         cursor = collection.find (data_fltr, proj_fltr)
+
     paths = []
+    ht = {}
     for path in cursor:
-        paths.append (path)
+        p = ''.join (path['path'])
+        if p not in ht:
+            paths.append (path)
+            ht[p] = True
 
     return paths
 

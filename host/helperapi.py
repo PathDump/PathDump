@@ -1,5 +1,6 @@
 import os
 import imp
+from bson import json_util
 import json
 import restapi
 import netifaces as ni
@@ -107,7 +108,7 @@ def processCollectedData (source, data):
     return module.run (source['argv'], data)
 
 def httpcmd (node, req):
-    return restapi.post (node, json.dumps (req), "pathdump")
+    return restapi.post (node, json.dumps (req, default=json_util.default), "pathdump")
 
 def checkSource (name, checksum):
     filepath = cwd + '/' + cp.options['repository'] + '/' + name

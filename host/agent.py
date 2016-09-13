@@ -3,6 +3,7 @@ from flask import make_response
 from flask import abort
 from flask import request
 from threading import Thread
+from bson import json_util
 import json
 import sys
 import os
@@ -12,6 +13,7 @@ import confparser as cp
 query_results = []
 
 app = Flask(__name__)
+
 @app.route('/')
 def index():
     return "Hello, World" 
@@ -23,7 +25,7 @@ def getpathdumppost():
         abort (404)
     else:
         output = handleRequest (request.json)
-        return json.dumps (output)
+        return json.dumps (output, default=json_util.default)
 
 @app.route('/pathdump', methods=['GET'])
 def getpathdumpget():
@@ -31,7 +33,7 @@ def getpathdumpget():
         abort (404)
     else:
         output = handleRequest (request.json)
-        return json.dumps (output)
+        return json.dumps (output, default=json_util.default)
 
 def handleRequest (req):
     global query_results
@@ -69,7 +71,7 @@ def handleRequest (req):
     for res in query_results:
         if len(res) > 0 and type(res) == type(()) and 'content-type' in res[0]:
             resp, content = res
-            content = json.loads (content)
+            content = json.loads (content, object_hook=json_util.object_hook)
         else:
             content = res
         data += content

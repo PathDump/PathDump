@@ -50,4 +50,5 @@ def initialize ():
 
 if __name__ == '__main__':
     initialize ()
-    app.run(debug=True,host="0.0.0.0")
+    app.run (debug = True, host = "0.0.0.0")
+    # app.run (debug = True, host = "0.0.0.0", processes = 2)

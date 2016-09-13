@@ -1,6 +1,5 @@
 import httplib2
-import json
-from datetime import datetime
+
 #from concurrent.futures import ThreadPoolExecutor
 #from requests_futures.sessions import FuturesSession
 #from requests import Request

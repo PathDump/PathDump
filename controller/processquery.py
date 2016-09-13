@@ -1,8 +1,10 @@
 import restapi as r
+from bson import json_util
 import json
 from threading import Thread
 import confparser as cp
 import os
+import postflow as pf
 
 results=[]
 
@@ -10,7 +12,7 @@ def wrapper (func, args, results):
     results.append ( func (*args) )
 
 def httpcmd (server, req, url):
-    return r.get (server, json.dumps(req), url)
+    return r.get (server, json.dumps(req, default=json_util.default), url)
 
 def handlerequest (req, url):
     if req['api'] == 'check_source':
@@ -23,13 +25,20 @@ def handlerequest (req, url):
         req.update ({'checksum': load_file (md5file)})
    # This api should be called only from queries installed in host 
     elif req['api'] == 'postFlow':
-        # TODO: NEED TO BE IMPLEMENTED
-        return json.dumps ([{'controller': True}])
+        # initialize a thread if it is not already done
+        pf.init()
+        # retrieve flow ID from the request and push it into a shared buffer
+        pf.push_flowdata (req['fid'], req['reason'], req['paths'])
+
+        # in background, the thread will concurrently execute a query in order
+        # to fetch a flow record from the destination host and put the record
+        # into a local file, so here we just return
+        return json.dumps ([{'controller': True}], default=json_util.default)
    # This api should be called only from queries installed in host 
     elif req['api'] == 'postResult':
-        print req['result']
-        # TODO: NEED TO BE IMPLEMENTED
-        return json.dumps ([{'controller': True}])
+        # print req['result']
+        # TODO: an extension; should be implemented
+        return json.dumps ([{'controller': True}], default=json_util.default)
 
     return execRequest (req, url)
 
@@ -51,10 +60,10 @@ def execRequest (req, url):
     for res in results:
         resp, content = res
         if resp['status'] == '200':
-            data += json.loads (content)
+            data += json.loads (content, object_hook=json_util.object_hook)
 
     results = []
-    return json.dumps (data)
+    return json.dumps (data, default=json_util.default)
 
 def load_file (filename):
     filepath = os.getcwd() + '/' + cp.options['repository'] + '/' + filename
