@@ -127,3 +127,13 @@ def source_available_at (hosts):
         if not val:
             return False
     return True
+
+def getAggTree (groupnodes):
+    req = {'api': 'getAggTree'}
+    req.update ({'groupnodes': groupnodes})
+
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
+    if resp['status'] != '200':
+        return {}
+    else:
+        return json.loads (content, object_hook=json_util.object_hook)[0]

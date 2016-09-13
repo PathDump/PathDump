@@ -49,16 +49,17 @@ def postflow_handler ():
         reason = msg[1]
         paths  = msg[2]
         if reason == 'POOR_PERF':
-            # tree = {'controller': {'parent': 'controller',
-            #                        'child': [fid['dip']]},
-            #         fid['dip']: {'parent': 'controller', 'child': []}}
-            # timeRange = (datetime.datetime.now() - datetime.timedelta(seconds=1), '*')
-            # FOR TEST ONLY
             tree = {'controller': {'parent': 'controller',
-                                   'child': ['172.17.0.3']},
-                    '172.17.0.3': {'parent': 'controller', 'child': []}}
-            # timeRange = (datetime.datetime(2015, 11, 9, 20, 20, 52, 765000) - datetime.timedelta(seconds=1), '*')
-            timeRange = ('*', '*')
+                                   'child': [fid['dip']]},
+                    fid['dip']: {'parent': 'controller', 'child': []}}
+            from_ts = datetime.datetime.now() - datetime.timedelta(minutes=10)
+            timeRange = (from_ts, '*')
+            # FOR TEST ONLY
+            # tree = {'controller': {'parent': 'controller',
+            #                        'child': ['172.17.0.3']},
+            #         '172.17.0.3': {'parent': 'controller', 'child': []}}
+            # timeRange = (datetime.datetime(2015, 11, 9, 20, 20, 52, 765000) - datetime.timedelta(minutes=10), '*')
+            # FOR TEST ONLY
             query = {'name': 'retrieve_flow.py', 'argv': [fid, timeRange]}
             data = ctrlapi.execQuery (tree, query)
             save_flowrecord (fid, data)
@@ -76,16 +77,16 @@ def save_flowrecord (fid, data):
     dip   = fid['dip']
     dport = fid['dport']
     proto = fid['proto']
-    str_fid = sip + ':' + sport + ':' + dip + ':' + dport + ':' + proto
+    str_fid = sip + ' ' + sport + ' ' + dip + ' ' + dport + ' ' + proto
     for d in data:
         str_path = concat_path (d['path'])
-        output = str_fid + '\t' + str_path + '\n'
+        output = str_fid + ' ' + str_path + '\n'
         logfp.write (output)
 
 def concat_path (path):
     str_path = ''
     str_path = path[0]
     for i in range(1, len(path)):
-        str_path = str_path + ':' + path[i]
+        str_path = str_path + ' ' + path[i]
 
     return str_path

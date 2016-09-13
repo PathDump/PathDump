@@ -5,6 +5,7 @@ from threading import Thread
 import confparser as cp
 import os
 import postflow as pf
+import aggtree
 
 results=[]
 
@@ -39,6 +40,13 @@ def handlerequest (req, url):
         # print req['result']
         # TODO: an extension; should be implemented
         return json.dumps ([{'controller': True}], default=json_util.default)
+    elif req['api'] == 'getAggTree':
+        tree = {}
+        for gn in req['groupnodes']:
+            aggtree.buildAggTree (tree, 'controller', 'controller',
+                                  aggtree.grouptree, gn)
+        aggtree.cleanupMetaData (tree)
+        return json.dumps ([tree], default=json_util.default)
 
     return execRequest (req, url)
 
