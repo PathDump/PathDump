@@ -44,12 +44,3 @@ cd mongo-cxx-driver
 sudo scons --prefix /usr/local --c++11=on install
 ```
 
-## Yaml build and install instruction
-```
-git clone https://github.com/jbeder/yaml-cpp.git
-mkdir build
-cd build/
-cmake ..
-make
-sudo make install
-```
