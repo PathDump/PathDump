@@ -1,10 +1,10 @@
-options = {'repository': './repo'}
+options = {}
 
 COMMENT_CHAR = '#'
 OPTION_CHAR =  '='
  
 def parse_config (filename):
-    options = {}
+    global options
     f = open (filename)
     for line in f:
         # First, remove comments:
@@ -21,7 +21,3 @@ def parse_config (filename):
             # store in dictionary:
             options[option] = value
     f.close()
-    return options
- 
-# options = parse_config('config.ini')
-# print options

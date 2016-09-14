@@ -3,6 +3,8 @@ from collections import deque
 import os
 import ctrlapi
 import datetime
+import time
+import confparser as cp
 
 tid = None
 msgqueue = deque ([])
@@ -14,7 +16,8 @@ def init ():
     if tid:
         return
     logname = 'ppflows_' + str(os.getpid()) + '.log'
-    logfp = open (logname, 'w', 1)
+    filepath = cp.options['home']+'/'+cp.options['collection']+'/'+logname
+    logfp = open (filepath, 'w', 1)
 
     tid = Thread (target = postflow_handler, args = ())
     tid.start()
@@ -49,16 +52,16 @@ def postflow_handler ():
         reason = msg[1]
         paths  = msg[2]
         if reason == 'POOR_PERF':
-            tree = {'controller': {'parent': 'controller',
-                                   'child': [fid['dip']]},
-                    fid['dip']: {'parent': 'controller', 'child': []}}
-            from_ts = datetime.datetime.now() - datetime.timedelta(minutes=10)
-            timeRange = (from_ts, '*')
-            # FOR TEST ONLY
             # tree = {'controller': {'parent': 'controller',
-            #                        'child': ['172.17.0.3']},
-            #         '172.17.0.3': {'parent': 'controller', 'child': []}}
-            # timeRange = (datetime.datetime(2015, 11, 9, 20, 20, 52, 765000) - datetime.timedelta(minutes=10), '*')
+            #                        'child': [fid['dip']]},
+            #         fid['dip']: {'parent': 'controller', 'child': []}}
+            # from_ts = datetime.datetime.now() - datetime.timedelta(minutes=10)
+            # timeRange = (from_ts, '*')
+            # FOR TEST ONLY
+            tree = {'controller': {'parent': 'controller',
+                                   'child': ['172.17.0.3']},
+                    '172.17.0.3': {'parent': 'controller', 'child': []}}
+            timeRange = (datetime.datetime(2015, 11, 9, 20, 20, 52, 765000) - datetime.timedelta(minutes=10), '*')
             # FOR TEST ONLY
             query = {'name': 'retrieve_flow.py', 'argv': [fid, timeRange]}
             data = ctrlapi.execQuery (tree, query)
@@ -80,7 +83,7 @@ def save_flowrecord (fid, data):
     str_fid = sip + ' ' + sport + ' ' + dip + ' ' + dport + ' ' + proto
     for d in data:
         str_path = concat_path (d['path'])
-        output = str_fid + ' ' + str_path + '\n'
+        output = str(time.time()) + ' ' + str_fid + ' ' + str_path + '\n'
         logfp.write (output)
 
 def concat_path (path):

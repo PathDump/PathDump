@@ -38,17 +38,18 @@ def getpathdumpget():
         return content
 
 def initialize ():
-    options = None
     if len (sys.argv) == 2:
-        options = cp.parse_config (sys.argv[1])
-    if options:
-        cp.options = options
+        cp.parse_config (sys.argv[1])
 
     # create app repository if it doesn't exist
-    if not os.path.exists (cp.options['repository']):
-        os.makedirs (cp.options['repository'])
+    if not os.path.exists (cp.options['home']+'/'+cp.options['repository']):
+        os.makedirs (cp.options['home']+'/'+cp.options['repository'])
 
-    aggtree.buildGroupTree (cp.options['grouptree'])
+    # create flowrecord collection directory if it doesn't exist
+    if not os.path.exists (cp.options['home']+'/'+cp.options['collection']):
+        os.makedirs (cp.options['home']+'/'+cp.options['collection'])
+
+    aggtree.buildGroupTree (cp.options['home']+'/'+cp.options['grouptree'])
     print 'aggtree.grouptree:', aggtree.grouptree
 
 if __name__ == '__main__':

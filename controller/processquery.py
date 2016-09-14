@@ -47,6 +47,9 @@ def handlerequest (req, url):
                                   aggtree.grouptree, gn)
         aggtree.cleanupMetaData (tree)
         return json.dumps ([tree], default=json_util.default)
+    elif req['api'] == 'getFlowCollDir':
+        colldir = cp.options['home'] + '/' + cp.options['collection']
+        return json.dumps ([colldir], default=json_util.default)
 
     return execRequest (req, url)
 
@@ -74,6 +77,6 @@ def execRequest (req, url):
     return json.dumps (data, default=json_util.default)
 
 def load_file (filename):
-    filepath = os.getcwd() + '/' + cp.options['repository'] + '/' + filename
+    filepath = cp.options['home']+'/'+cp.options['repository']+'/'+filename
     with open (filepath, 'r') as f:
         return f.read()
