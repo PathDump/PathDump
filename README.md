@@ -22,7 +22,7 @@ PathDump
    |--flow-mon
    |--query-agent
 |-- examples
-|-- conf
+|-- config
 |-- README.md
 |-- LICENSE
 ```
