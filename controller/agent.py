@@ -9,6 +9,7 @@ import processquery as pq
 import sys
 import confparser as cp
 import os
+import aggtree
 
 app = Flask(__name__)
 
@@ -42,12 +43,18 @@ def initialize ():
         options = cp.parse_config (sys.argv[1])
     if options:
         cp.options = options
-    print cp.options
 
     # create app repository if it doesn't exist
     if not os.path.exists (cp.options['repository']):
         os.makedirs (cp.options['repository'])
 
+    aggtree.buildGroupTree (cp.options['grouptree'])
+    print 'aggtree.grouptree:', aggtree.grouptree
+
 if __name__ == '__main__':
     initialize ()
-    app.run(debug=True,host="0.0.0.0")
+    app.run (debug = True, host = "0.0.0.0")
+
+    # The following doesn't work in a docker setup;
+    # TODO: Run tests in a host OS
+    # app.run (debug = True, host = "0.0.0.0", processes = 2)

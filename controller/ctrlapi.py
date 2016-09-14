@@ -1,4 +1,5 @@
 import restapi as r
+from bson import json_util
 import json
 from copy import deepcopy
 
@@ -31,16 +32,18 @@ def execQuery (tree, query, aggcode=None):
     hosts = check_source (tree, query['name'])
     if send_source (hosts, tree, query['name']) == False:
         return []
-    hosts = check_source (tree, aggcode['name'])
-    if send_source (hosts, tree, aggcode['name']) == False:
-        return []
+
+    if aggcode:
+        hosts = check_source (tree, aggcode['name'])
+        if send_source (hosts, tree, aggcode['name']) == False:
+            return []
 
     req = buildReq ('execQuery', tree, query, aggcode)
-    resp, content = r.get (controller, json.dumps (req), "pathdump")
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
     if resp['status'] != '200':
         return []
     else:
-        return json.loads (content)
+        return json.loads (content, object_hook=json_util.object_hook)
 
 def installQuery (tree, query, interval):
     hosts = check_source (tree, query['name'])
@@ -48,19 +51,19 @@ def installQuery (tree, query, interval):
         return []
 
     req = buildReq ('installQuery', tree, query, None, interval)
-    resp, content = r.get (controller, json.dumps (req), "pathdump")
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
     if resp['status'] != '200':
         return []
     else:
-        return json.loads (content)
+        return json.loads (content, object_hook=json_util.object_hook)
 
 def uninstallQuery (tree, query):
     req = buildReq ('uninstallQuery', tree, query)
-    resp, content = r.get (controller, json.dumps (req), "pathdump")
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
     if resp['status'] != '200':
         return []
     else:
-        return json.loads (content)
+        return json.loads (content, object_hook=json_util.object_hook)
 
 def buildReq (api, tree, query, aggcode=None, interval=None):
     req = {'api': api}
@@ -77,8 +80,8 @@ def check_source (tree, filename):
     req.update ({'tree': tree})
     req.update ({'name': filename})
 
-    resp, content = r.post (controller, json.dumps (req), "pathdump")
-    return json.loads (content)
+    resp, content = r.post (controller, json.dumps (req, default=json_util.default), "pathdump")
+    return json.loads (content, object_hook=json_util.object_hook)
 
 def send_source (hosts, tree, filename):
     if source_available_at (hosts):
@@ -91,8 +94,8 @@ def send_source (hosts, tree, filename):
     req.update ({'tree': send_tree})
     req.update ({'name': filename})
 
-    resp, content = r.post (controller, json.dumps (req), "pathdump")
-    return source_available_at (json.loads (content))
+    resp, content = r.post (controller, json.dumps (req, default=json_util.default), "pathdump")
+    return source_available_at (json.loads (content, object_hook=json_util.object_hook))
 
 def remove_hosts_from_tree (hosts, tree):
     send_tree = deepcopy (tree)
@@ -124,3 +127,13 @@ def source_available_at (hosts):
         if not val:
             return False
     return True
+
+def getAggTree (groupnodes):
+    req = {'api': 'getAggTree'}
+    req.update ({'groupnodes': groupnodes})
+
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
+    if resp['status'] != '200':
+        return {}
+    else:
+        return json.loads (content, object_hook=json_util.object_hook)[0]
