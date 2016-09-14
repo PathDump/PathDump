@@ -5,6 +5,7 @@ PathDump
 
 ## Dependency
 * Python 2.7+
+* Python Watchdog module 0.8.3
 * Linux Kernel 3.x <-- Fix me!
 * Open vSwitch 2.3.90: http://openvswitch.org/
 * MongoDB: https://www.mongodb.org/
@@ -26,11 +27,16 @@ PathDump
 |-- LICENSE
 ```
 
-## Mongodb build instructions 
-* Download mongo-cxx-driver-legacy-1.1.2.zip 
+## Required package installation instructions
+* MongoDB build
 ```
 unzip mongo-cxx-driver-legacy-1.1.2.zip 
 cd mongo-cxx-driver
 sudo scons --prefix /usr/local --c++11=on install
+```
+
+* Python Watchdog module
+```
+pip install watchdog
 ```
 
