@@ -10,7 +10,7 @@ OBJS    := $(patsubst %.cc,$(BINDIR)/%.o,$(SRCS))
 CC = c++
 CFLAGS  = -g -Wall --std=c++11 
 curr_dir = $(shell pwd)
-LIBS = -L/usr/local/lib -lmongoclient -lyaml-cpp -lboost_thread -lboost_system -lboost_regex
+LIBS = -L/usr/local/lib -lmongoclient -lboost_thread -lboost_system -lboost_regex
 INC = -I $(SRCDIR)
 
 all:  directories $(BINDIR)/$(APP)

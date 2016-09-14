@@ -14,7 +14,6 @@
 #include <sys/time.h>
 #include "mongo/client/dbclient.h" // for the driver
 #include "mongo/bson/bson.h"
-#include "yaml-cpp/yaml.h"
 
 using namespace std;
 #define SERVER_PORT 5555
@@ -395,11 +394,15 @@ int decodepath(flow_stats_t data){
     return 0;
 }
 
-int main()
-{
+int main(int argc, char* argv[])
+{	
+    if (argc < 2) {
+	std::cerr << "Usage: " << argv[0] << " K-ary value of fat-tree" << endl;
+	std::cerr << "Example: \"./flow-mon 4\" (for 4-ary fat-tree)" << std::endl;
+	return 1;
+	}
     vector<pthread_t *> vt;
-    YAML::Node config = YAML::LoadFile("../../../config/config.yaml");
-    decode d(config["k"].as<int>());
+    decode d(std::stoi(argv[1]));
     D=&d;
     pthread_t thread1,thread2;
     mongo::client::initialize();
