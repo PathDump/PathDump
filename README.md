@@ -19,16 +19,10 @@ PathDump
 ```
 |-- src
     |-- controller
-       |-- Network (scripts to generate switch rules)
-       |-- API (Query processing)
-	   |--Apps
-	     |-- Alerts
-	     |-- MapReduce
-	     |-- Loops
     |-- host
-       |--FlowMonitor (user space -> DB go here)
-       |--Datapath (OVS kernel changes)
-       |--API (Query processing)
+       |--ovs-patch (OVS kernel -> user space)
+       |--flow-mon (user space -> DB go here)
+       |--query-agent (API's)
 |-- examples
 |-- lib
 |-- conf
