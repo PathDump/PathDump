@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <malloc.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <linux/netlink.h>
@@ -14,6 +15,12 @@
 #include <sys/time.h>
 #include "mongo/client/dbclient.h" // for the driver
 #include "mongo/bson/bson.h"
+#include <zmq.hpp>
+#include <time.h>
+
+#if (defined (WIN32))
+#include <zhelpers.hpp>
+#endif
 
 using namespace std;
 #define SERVER_PORT 5555
@@ -29,6 +36,9 @@ int done = 0;
 int err_cnt=0;
 int nl_sd; /*the socket*/
 decode *D;
+zmq::context_t context (1);
+zmq::socket_t publisher (context, ZMQ_PUB);
+
 
 int init_mongodb(mongo::DBClientConnection *c){
     try {
@@ -172,6 +182,14 @@ string getDateString(struct timeval *tv)
 
 }
 
+int publish(mongo::BSONObj *p){
+	std::string json_str = "TIB "+p->jsonString();
+    	zmq::message_t message(json_str.length());
+	memcpy(message.data(), json_str.c_str(), json_str.length());
+	publisher.send(message);
+	return 1;
+}
+
 int insert_db(conn_it e,mongo::DBClientConnection *cdb){
     
     mongo::BSONObjBuilder b;
@@ -210,10 +228,16 @@ int insert_db(conn_it e,mongo::DBClientConnection *cdb){
     barr.append(dip);
     b << "path" << barr.arr();
     mongo::BSONObj p=b.obj();
-
+    /* Publish the flow stats to subscribed applications */
+    if(publish(&p) < 0){
+	std::cerr << "Error while publishing " << endl;
+    }
     cdb->insert("PathDump.TIB",p);
     return 0;
 }
+
+
+
 
 void* monflows(void *ptr){
     mongo::DBClientConnection *cdb;
@@ -405,6 +429,7 @@ int main(int argc, char* argv[])
     decode d(std::stoi(argv[1]));
     D=&d;
     pthread_t thread1,thread2;
+    publisher.bind("tcp://*:5556");
     mongo::client::initialize();
     mongo::DBClientConnection c;
     init_mongodb(&c);
