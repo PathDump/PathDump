@@ -10,8 +10,7 @@ PathDump
 * Open vSwitch 2.3.90: http://openvswitch.org/
 * MongoDB: https://www.mongodb.org/
 * MongoDB Legacy C++ Driver 1.1.2: https://github.com/mongodb/mongo-cxx-driver/releases/tag/legacy-1.1.2
-* YAML: https://github.com/jbeder/yaml-cpp
-* libzmq: https://github.com/zeromq/libzmq 
+* ZMQ: https://github.com/zeromq/libzmq 
 * Flask: http://flask.pocoo.org/
 * Ryu: http://osrg.github.io/ryu/
 * Perf-tools: https://github.com/brendangregg/perf-tools
@@ -49,5 +48,3 @@ cd cppzmq && sudo cp zmq.hpp zmq_addon.hpp /usr/local/include/
 ```
 pip install watchdog
 ```
-
->>>>>>> 5ddac8b55fcaa8421ff39dde056821293439b361
