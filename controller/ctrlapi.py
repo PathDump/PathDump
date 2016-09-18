@@ -2,6 +2,7 @@ import restapi as r
 from bson import json_util
 import json
 from copy import deepcopy
+import flowcoll
 
 controller = "0.0.0.0"
 
@@ -137,3 +138,25 @@ def getAggTree (groupnodes):
         return {}
     else:
         return json.loads (content, object_hook=json_util.object_hook)[0]
+
+def getFlowCollectionDir():
+    req = {'api': 'getFlowCollDir'}
+
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
+    if resp['status'] != '200':
+        return ''
+    else:
+        return json.loads (content, object_hook=json_util.object_hook)[0]
+
+def getPoorTCPFlow():
+    if not flowcoll.started:
+        dirpath = getFlowCollectionDir()
+        flowcoll.init (dirpath)
+
+    try:
+        flow = flowcoll.getFlowRecord()
+    except KeyboardInterrupt:
+        flowcoll.cleanup()
+        raise
+
+    return flow
