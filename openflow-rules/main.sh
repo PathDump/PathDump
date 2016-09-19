@@ -1,18 +1,21 @@
+#!/bin/bash
+suffix=".inf.ed.ac.uk"
+node_list=(nsl100 nsl101 nsl102 nsl103 nsl104 nsl105)
 add_flows(){
-   for var in nsl100 nsl101 nsl102 nsl103 nsl104 nsl105
-   do
+    for var in ${node_list[*]}
+    do
        echo "serving "$var
-       ssh admin@$var < ./script/del-flows_$var.sh
-       ssh admin@$var < ./script/add-flows_$var.sh
+       ssh admin@$var$suffix < ./script/del-flows_$var.sh
+       ssh admin@$var$suffix < ./script/add-flows_$var.sh
    done
 }
 
 add_bridges(){
-   for var in nsl100 nsl101 nsl102 nsl103 nsl104 nsl105
-   do
+    for var in ${node_list[*]}
+    do
        echo "serving "$var
-       ssh admin@$1 < ./script/del-br_$1.sh
-       ssh admin@$1 < ./script/add-br_$1.sh
+       ssh admin@$var$suffix < ./script/del-br_$var.sh
+       ssh admin@$var$suffix < ./script/add-br_$var.sh
    done
 }
 
@@ -20,7 +23,7 @@ del_bridges() {
    for var in nsl100 nsl101 nsl102 nsl103 nsl104 nsl105
    do
        echo "serving "$var
-       ssh admin@$1 < ./script/del-br_$1.sh
+       ssh admin@$1 < ./script/del-br_$var.sh
    done
 }
 
