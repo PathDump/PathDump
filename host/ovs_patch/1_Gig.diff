@@ -1,0 +1,519 @@
+diff --git a/datapath/datapath.c b/datapath/datapath.c
+index c0af9ad..50c4ece 100644
+--- a/datapath/datapath.c
++++ b/datapath/datapath.c
+@@ -268,7 +268,7 @@ void ovs_dp_process_packet(struct sk_buff *skb, struct sw_flow_key *key)
+ 	u32 n_mask_hit;
+ 
+ 	stats = this_cpu_ptr(dp->stats_percpu);
+-
++	
+ 	/* Look up flow. */
+ 	flow = ovs_flow_tbl_lookup_stats(&dp->table, key, skb_get_hash(skb),
+ 					 &n_mask_hit);
+@@ -2305,7 +2305,12 @@ static int __init dp_init(void)
+ 	if (err < 0)
+ 		goto error_unreg_netdev;
+ 
+-	return 0;
++	err = pathdump_init();
++	if (err < 0){
++	     pr_info("error = %d\n",err); 
++	     goto error;
++     	}
++	return 0;	
+ 
+ error_unreg_netdev:
+ 	ovs_netdev_exit();
+@@ -2336,6 +2341,7 @@ static void dp_cleanup(void)
+ 	ovs_flow_exit();
+ 	ovs_internal_dev_rtnl_link_unregister();
+ 	action_fifos_exit();
++	pathdump_exit();
+ }
+ 
+ module_init(dp_init);
+diff --git a/datapath/datapath.h b/datapath/datapath.h
+index fdf35f0..6bf89e2 100644
+--- a/datapath/datapath.h
++++ b/datapath/datapath.h
+@@ -203,6 +203,8 @@ void ovs_dp_notify_wq(struct work_struct *work);
+ int action_fifos_init(void);
+ void action_fifos_exit(void);
+ 
++int pathdump_init(void);
++void pathdump_exit(void);
+ #define OVS_NLERR(logging_allowed, fmt, ...)			\
+ do {								\
+ 	if (logging_allowed && net_ratelimit())			\
+diff --git a/datapath/linux/compat/skbuff-openvswitch.c b/datapath/linux/compat/skbuff-openvswitch.c
+index 5de43b3..4818354 100644
+--- a/datapath/linux/compat/skbuff-openvswitch.c
++++ b/datapath/linux/compat/skbuff-openvswitch.c
+@@ -2,6 +2,96 @@
+ #include <linux/netdevice.h>
+ #include <linux/skbuff.h>
+ #include <linux/if_vlan.h>
++#include <linux/ip.h>
++
++//praveen - modified
++#include <linux/workqueue.h> //required for workqueues
++#include <linux/in.h>
++#include <net/sock.h>
++#include <linux/delay.h>
++#include <linux/inet.h>
++#include <linux/kernel.h>
++#include <linux/kfifo.h>
++#include <linux/netlink.h>
++#include <linux/spinlock.h>
++#include <linux/sched.h>
++#include <linux/tcp.h>
++#include <linux/udp.h>
++#include <linux/random.h>
++#include <linux/hashtable.h>
++#include <linux/time.h>
++#include <net/dsfield.h>
++
++
++#define SERVER_PORT 5555
++#define FIFO_SIZE 10
++#define SYN 9
++#define FIN 8
++#define ACK 4
++#define TCP_FLAGS_BE16(tp) (*(__be16 *)&tcp_flag_word(tp) & htons(0x0FFF))
++#define POLL_INTRVL 5000  //30 secs
++#define TBL_SIZE_BITS 20 
++
++
++typedef struct {
++    __be32 saddr;
++    __be32 daddr;
++    __be32 sport;
++    __be32 dport;
++   	u8 proto;
++    __be16 vlan_buff[2];
++}fkey_tags_t;
++
++typedef struct{
++    __be32 pkts;
++    __be64 bytes;
++        u8  vlan_len;
++    struct timeval stime;
++    struct timeval etime;
++}fkey_data_t;
++
++typedef struct {
++	struct work_struct work;
++}pathdump_work_t;
++
++typedef struct {
++    fkey_tags_t fkey_tags;
++    fkey_data_t fkey_data;
++    bool fin;
++    spinlock_t lock;
++    struct hlist_node next;
++}fdata_t;
++
++static struct kfifo fifo;
++static spinlock_t lock_in;
++static spinlock_t lock_out;
++struct sock *nl_sk=NULL;
++struct sockaddr_nl dest_addr;
++int mem_allocs=0;
++unsigned long poll_intrvl;
++pathdump_work_t *work;
++struct workqueue_struct *wq=0; 
++
++void cherry_vlan_data_exit(void);
++int init_vlan_data(void);
++void del_hashtbl(void);
++void stub(struct sk_buff *skb);
++static int __skb_vlan_pop(struct sk_buff *skb, u16 *vlan_tci);
++fdata_t* fmem_alloc_init(void);
++static void send_flowstats(struct work_struct *w);
++
++
++DEFINE_HASHTABLE(flowtbl,TBL_SIZE_BITS);
++static DECLARE_DELAYED_WORK(dwork,send_flowstats);
++
++fdata_t* fmem_alloc_init()
++{
++    fdata_t *p = kmalloc(sizeof(fdata_t), GFP_ATOMIC);
++    if (p){
++        memset(p,0,sizeof(fdata_t));
++    }
++    return p;    
++}
+ 
+ #if !defined(HAVE_SKB_WARN_LRO) && defined(NETIF_F_LRO)
+ 
+@@ -27,6 +117,29 @@ static inline bool head_frag(const struct sk_buff *skb)
+ #endif
+ }
+ 
++
++static bool udphdr_ok(struct sk_buff *skb)
++{
++	return pskb_may_pull(skb, skb_transport_offset(skb) +
++				  sizeof(struct udphdr));
++}
++
++static bool tcphdr_ok(struct sk_buff *skb)
++{
++	int th_ofs = skb_transport_offset(skb);
++	int tcp_len;
++
++	if (unlikely(!pskb_may_pull(skb, th_ofs + sizeof(struct tcphdr))))
++		return false;
++
++	tcp_len = tcp_hdrlen(skb);
++	if (unlikely(tcp_len < sizeof(struct tcphdr) ||
++		     skb->len < th_ofs + tcp_len))
++		return false;
++
++	return true;
++}
++
+  /**
+  *	skb_zerocopy_headlen - Calculate headroom needed for skb_zerocopy()
+  *	@from: source buffer
+@@ -139,9 +252,231 @@ int skb_ensure_writable(struct sk_buff *skb, int write_len)
+ }
+ #endif
+ 
++void send_to_user(fdata_t* curr){
++	struct sk_buff *skb_out;
++	struct nlmsghdr *nlh;
++	int msg_size;
++	int res;
++        struct flow_stats_t {
++             fkey_tags_t fkey_tags;
++             fkey_data_t fkey_data;
++        };
++	struct flow_stats_t flow_stats;
++        memcpy(&(flow_stats.fkey_tags),&(curr->fkey_tags),sizeof(fkey_tags_t));
++        memcpy(&(flow_stats.fkey_data),&(curr->fkey_data),sizeof(fkey_data_t));
++        msg_size=sizeof(struct flow_stats_t);
++        skb_out = nlmsg_new(msg_size, 0);
++        if(!skb_out) {            	
++              printk(KERN_ERR "Failed to allocate new skb\n");
++              return;
++         }
++        nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, msg_size, 0);
++        NETLINK_CB(skb_out).dst_group = 0; /* not in mcast group */
++        memcpy(nlmsg_data(nlh),&flow_stats, msg_size);
++        res = nlmsg_unicast(nl_sk, skb_out, SERVER_PORT);
++        if(res < 0) {
++             printk(KERN_INFO "Error while sending data to user\n");
++          }
++        return;
++}
++
++void send_flowstats(struct work_struct *work){
++    int bucket;
++    int num_entries=0;
++    fdata_t *curr;
++    int idle_timeout=POLL_INTRVL/1000;
++    struct timeval curr_time;
++    do_gettimeofday(&curr_time);
++    hash_for_each_rcu(flowtbl,bucket,curr,next){
++        num_entries++;
++        if(curr){
++	    if((curr_time.tv_sec-curr->fkey_data.etime.tv_sec) >= idle_timeout){
++                send_to_user(curr);
++                hash_del_rcu(&(curr->next));
++                kfree(curr);
++            }
++        }
++    }
++  queue_delayed_work(wq,&dwork,poll_intrvl);
++}
++
++void del_flowstats(fdata_t *c){
++    if(c){
++        send_to_user(c);
++        hash_del_rcu(&(c->next));
++        kfree(c);
++    }
++    return;
++}
++
++void del_hashtbl(){
++    int bucket;
++    fdata_t *curr;
++    hash_for_each_rcu(flowtbl,bucket,curr,next){
++        if(curr){
++                hash_del_rcu(&(curr->next));
++                kfree(curr);
++                printk("Hash size after deletion: %ld\n",HASH_SIZE(flowtbl));
++            }
++        }
++}
++
++void stub(struct sk_buff *skb)
++{
++	printk(KERN_INFO "stub created for netlink socket called\n");
++}
++
++struct netlink_kernel_cfg cfg = {
++        .input = stub,
++};
++
++int pathdump_init(void)
++{
++    poll_intrvl=msecs_to_jiffies(POLL_INTRVL);
++    spin_lock_init(&lock_out);
++    spin_lock_init(&lock_in);
++    nl_sk = netlink_kernel_create(&init_net, NETLINK_UNUSED,&cfg);
++    if(!nl_sk){
++	printk(KERN_ALERT "Error creating socket.\n");
++	return -10;
++      }
++    if(wq==NULL)
++	wq = create_workqueue("cherry_wq");
++    if(wq)
++        queue_delayed_work(wq,&dwork,poll_intrvl);
++    if (kfifo_alloc(&fifo, FIFO_SIZE, GFP_KERNEL)) {
++        printk(KERN_WARNING "error kfifo_alloc\n");
++        return -ENOMEM;
++    }
++    printk(KERN_INFO "queue size: %u\n", kfifo_size(&fifo));
++    return 0;
++}
++
++void pathdump_exit(void)
++{
++     printk(KERN_INFO "Exiting pathdump ovs module\n");
++     netlink_kernel_release(nl_sk);
++    
++    cancel_delayed_work_sync(&dwork);
++    if(wq)
++	{
++		flush_workqueue(wq);
++		destroy_workqueue(wq);
++	}
++    del_hashtbl();
++    kfifo_free(&fifo);
++    return;
++}
++
++int add_vlan(u16 vlan_tci,__be16 *vlan_tags,u8 *vlan_count)
++{
++	vlan_tags[*vlan_count]=vlan_tci;
++        (*vlan_count)++;
++        return 0;
++}
++
++fdata_t* htbl_lookup(fkey_tags_t *cdata,u64 key){
++        fdata_t *curr;
++        int i;
++        hash_for_each_possible_rcu(flowtbl,curr,next,key)	
++	{
++            if(curr->fkey_tags.saddr==cdata->saddr && curr->fkey_tags.sport==cdata->sport && curr->fkey_tags.dport==cdata->dport && curr->fkey_tags.daddr==cdata->daddr && curr->fkey_tags.proto==cdata->proto){
++            for(i=0;i<curr->fkey_data.vlan_len;i++){
++                   if(curr->fkey_tags.vlan_buff[i] != cdata->vlan_buff[i])
++                       return NULL;
++            	}
++           return curr;
++       	    }
++    	}	
++  return NULL;
++}
++
++u64 get_hash(fkey_tags_t *cdata){
++    u64 hash=5381;
++    char *key_str=(char *)cdata;
++    int i;
++    
++    for(i=0;i<sizeof(fkey_tags_t);i++)
++        hash=((hash << 5) + hash) + key_str[i];
++    return hash;
++}
++
++int pathdump_send_pathinfo_to_user(struct sk_buff *skb, __be16 *vlan_tags, int vlan_count)
++{       
++        __be16 tcp_flags=0;
++        unsigned char i=0;
++        bool syn=0;
++        fkey_tags_t cdata;
++        u64 key;
++        fdata_t *cdata_ptr=NULL;
++       	struct iphdr *nh; 
++	struct tcphdr *tcp;
++        struct udphdr *udp;
++	memset(&cdata,0,sizeof(cdata));
++	for(i=0;i<vlan_count;i++){
++            cdata.vlan_buff[i]=vlan_tags[i];
++        } 
++        nh = ip_hdr(skb); 
++        cdata.saddr=nh->saddr;
++        cdata.daddr=nh->daddr;
++	cdata.proto=nh->protocol;
++        if (nh->protocol == IPPROTO_TCP) {
++	    if (tcphdr_ok(skb)) {
++                    tcp = tcp_hdr(skb);
++                    cdata.sport=tcp->source;
++                    cdata.dport=tcp->dest;
++                    tcp_flags = TCP_FLAGS_BE16(tcp);
++                 }
++        }
++       else if (nh->protocol == IPPROTO_UDP) {
++            if (udphdr_ok(skb)) {
++                   udp = udp_hdr(skb);
++                   cdata.sport = udp->source;
++                   cdata.dport = udp->dest;
++               }
++        }
++        key=get_hash(&cdata);
++        cdata_ptr=htbl_lookup(&cdata,key);
++        if(cdata_ptr) {
++           spin_lock(&(cdata_ptr->lock));
++           cdata_ptr->fkey_data.pkts +=1;
++           cdata_ptr->fkey_data.bytes += (skb->len + (skb_vlan_tag_present(skb) ? VLAN_HLEN : 0));
++           do_gettimeofday(&(cdata_ptr->fkey_data.etime));
++           spin_unlock(&(cdata_ptr->lock));
++        }
++        else{
++            cdata_ptr=fmem_alloc_init();
++            if (cdata_ptr){
++                memcpy((void*)&(cdata_ptr->fkey_tags),(void*)&cdata,sizeof(fkey_tags_t));
++                cdata_ptr->fkey_data.pkts = 1;
++                cdata_ptr->fkey_data.bytes = skb->len + (skb_vlan_tag_present(skb) ? VLAN_HLEN : 0);
++                cdata_ptr->fkey_data.vlan_len = vlan_count;
++                //cdata_ptr->fkey_data.stime=jiffies;
++                do_gettimeofday(&(cdata_ptr->fkey_data.etime));
++                do_gettimeofday(&(cdata_ptr->fkey_data.stime));
++                spin_lock_init(&(cdata_ptr->lock));
++                hash_add_rcu(flowtbl,&(cdata_ptr->next),key);
++            }
++            else{
++                printk("Error while memory allocation \n");
++            }
++        }
++        if (tcp_flags){
++            if(cdata_ptr->fin)    
++                del_flowstats(cdata_ptr);
++            else if (((tcp_flags & (1 << FIN)) != 0)) {
++                spin_lock(&(cdata_ptr->lock));
++                cdata_ptr->fin=1;
++                spin_unlock(&(cdata_ptr->lock));
++                }
++            }
++    return 0;
++}
++
++
+ #ifndef HAVE_SKB_VLAN_POP
+ /* remove VLAN header from packet and update csum accordingly. */
+-static int __skb_vlan_pop(struct sk_buff *skb, u16 *vlan_tci)
++int __skb_vlan_pop(struct sk_buff *skb, u16 *vlan_tci)
+ {
+ 	struct vlan_hdr *vhdr;
+ 	unsigned int offset = skb->data - skb_mac_header(skb);
+@@ -207,6 +542,44 @@ int skb_vlan_pop(struct sk_buff *skb)
+ }
+ #endif
+ 
++int pathdump_skb_vlan_pop(struct sk_buff *skb)
++{
++	u16 vlan_tci;
++	int err;
++    	u8 vlan_count=0;
++    	__be16 vlan_tags[2]; 
++                
++        memset(vlan_tags,0,sizeof(vlan_tags));
++	if (likely(skb_vlan_tag_present(skb))) {
++		add_vlan(skb_vlan_tag_get(skb),vlan_tags,&vlan_count);
++		skb->vlan_tci = 0;
++	} else {
++		if (unlikely((skb->protocol != htons(ETH_P_8021Q) &&
++			      skb->protocol != htons(ETH_P_8021AD)) ||
++			     skb->len < VLAN_ETH_HLEN)) {
++		return 0;
++		}
++		
++		err = __skb_vlan_pop(skb, &vlan_tci);
++		add_vlan(vlan_tci,vlan_tags,&vlan_count);
++		if (err)
++		{
++		return err;
++		}
++	}
++	while (skb->protocol == htons(ETH_P_8021Q) && vlan_count <= 2)
++	{
++	err = __skb_vlan_pop(skb, &vlan_tci);
++	add_vlan(vlan_tci,vlan_tags,&vlan_count);
++	}
++	pathdump_send_pathinfo_to_user(skb,vlan_tags,vlan_count);
++	if (unlikely(err))
++	{
++		return err;
++	}
++	return 0;
++}
++
+ #ifndef HAVE_SKB_VLAN_PUSH
+ int skb_vlan_push(struct sk_buff *skb, __be16 vlan_proto, u16 vlan_tci)
+ {
+diff --git a/datapath/vport.c b/datapath/vport.c
+index 4486d06..667b445 100644
+--- a/datapath/vport.c
++++ b/datapath/vport.c
+@@ -469,6 +469,26 @@ u32 ovs_vport_find_upcall_portid(const struct vport *vport, struct sk_buff *skb)
+ 	return ids->ids[hash - ids->n_ids * reciprocal_divide(hash, ids->rn_ids)];
+ }
+ 
++void pathdump_strip_ids(struct vport *vport,struct sk_buff *skb)
++{
++	struct ethhdr *eth;
++	int err;
++        __be16 vlan_tags[2];
++	skb_reset_mac_header(skb);
++	eth=eth_hdr(skb);
++	if (skb->vlan_tci)
++	{
++		err = pathdump_skb_vlan_pop(skb);	 
++	  	//pr_info("err = %d",err);
++	}
++        else if (eth->h_proto==htons(ETH_P_IP)){
++            //bluff pkts of pod servers with no tags has 1 tag;
++	    memset(vlan_tags,0,sizeof(vlan_tags));
++            pathdump_send_pathinfo_to_user(skb, vlan_tags, 1); 
++        }
++	return;
++}
++
+ /**
+  *	ovs_vport_receive - pass up received packet to the datapath for processing
+  *
+@@ -486,6 +506,7 @@ void ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
+ 	struct pcpu_sw_netstats *stats;
+ 	struct sw_flow_key key;
+ 	int error;
++        pathdump_strip_ids(vport, skb);
+ 
+ 	stats = this_cpu_ptr(vport->percpu_stats);
+ 	u64_stats_update_begin(&stats->syncp);
+@@ -501,7 +522,7 @@ void ovs_vport_receive(struct vport *vport, struct sk_buff *skb,
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+-
++	
+ 	ovs_dp_process_packet(skb, &key);
+ }
+ EXPORT_SYMBOL_GPL(ovs_vport_receive);
+diff --git a/datapath/vport.h b/datapath/vport.h
+index c289d60..7187fd3 100644
+--- a/datapath/vport.h
++++ b/datapath/vport.h
+@@ -66,6 +66,9 @@ int ovs_tunnel_get_egress_info(struct ovs_tunnel_info *egress_tun_info,
+ int ovs_vport_get_egress_tun_info(struct vport *vport, struct sk_buff *skb,
+ 				  struct ovs_tunnel_info *info);
+ 
++int pathdump_skb_vlan_pop(struct sk_buff *skb);
++int pathdump_send_pathinfo_to_user(struct sk_buff *skb, __be16 *vlan_tags, int vlan_count);
++
+ /* The following definitions are for implementers of vport devices: */
+ struct vport_err_stats {
+ 	atomic_long_t rx_dropped;
