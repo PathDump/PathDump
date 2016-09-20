@@ -8,7 +8,7 @@ modprobe vxlan
 modprobe gre
 #insmod /home/ubuntu/pathdump/ovswitch/datapath/linux/openvswitch.ko
 insmod $(pwd)/ovs/datapath/linux/openvswitch.ko
-ovsdb-server --remote=punix:/usr/local/openvswitch/db.sock \
+ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
              --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
              --private-key=db:Open_vSwitch,SSL,private_key \
              --certificate=db:Open_vSwitch,SSL,certificate \
@@ -16,10 +16,10 @@ ovsdb-server --remote=punix:/usr/local/openvswitch/db.sock \
              --pidfile --detach
 ovs-vsctl --no-wait init
 ovs-vswitchd --pidfile --detach
-#sleep 2
-#sh twohosts.sh -b
+sleep 2
+sh twohosts.sh -b
 #sleep 10
-#sh twohosts.sh -c
-#ifconfig eth1 0
-#ifconfig vnet0 up
+sh twohosts.sh -c
+ifconfig eth1 0
+ifconfig vnet0 up
 
