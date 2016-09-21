@@ -6,7 +6,7 @@ import confparser as cp
 import tcpmon
 
 client=MongoClient('localhost', 27017)
-database=client['pathdump']
+database=client['PathDump']
 collection=database['TIB']
 
 def getFlows (linkID, timeRange):
@@ -23,6 +23,7 @@ def getFlows (linkID, timeRange):
         cursor = collection.find (data_fltr, proj_fltr)
     flows = []
     for f in cursor:
+        print "entry ",f
         flow = {'flowid': {}, 'path': None}
         flow['flowid']['sip'] = f['sip']
         flow['flowid']['sport'] = f['sport']
