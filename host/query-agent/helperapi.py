@@ -8,6 +8,7 @@ import confparser as cp
 import pathdumpapi as pdapi
 from threading import Thread
 import time
+import socket
 
 cwd = os.getcwd()
 
@@ -90,7 +91,8 @@ def doAndFilters (filters):
 
 # returns an IP address as Node ID
 def getCurNodeID ():
-    return ni.ifaddresses('eth0')[2][0]['addr']
+    return socket.gethostname() 
+    #return ni.ifaddresses('eth0')[2][0]['addr']
 
 def wrapper (func, args, results):
     results.append (func (*args))
