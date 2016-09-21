@@ -17,7 +17,12 @@
 #include "mongo/bson/bson.h"
 #include <zmq.hpp>
 #include <time.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #if (defined (WIN32))
 #include <zhelpers.hpp>
 #endif
@@ -36,6 +41,7 @@ int done = 0;
 int err_cnt=0;
 int nl_sd; /*the socket*/
 decode *D;
+std::string ipaddr;
 zmq::context_t context (1);
 zmq::socket_t publisher (context, ZMQ_PUB);
 
@@ -188,6 +194,18 @@ int publish(mongo::BSONObj *p){
 	memcpy(message.data(), json_str.c_str(), json_str.length());
 	publisher.send(message);
 	return 1;
+}
+
+string getIPAddress(string inf_name){
+    int fd;
+    struct ifreq ifr;
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy(ifr.ifr_name, inf_name.c_str(), IFNAMSIZ-1);
+    ioctl(fd, SIOCGIFADDR, &ifr);
+    close(fd);
+    std::string addr=std::string(inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+    return addr;
 }
 
 int insert_db(conn_it e,mongo::DBClientConnection *cdb){
@@ -368,10 +386,14 @@ int decodepath(flow_stats_t data){
         bool insert=false;
         bool update=false;
         
+        /*packets with local ip are not pushed to TIB */
+        if(getIP(data.fkey_tags.saddr)==ipaddr)
+            return 0; 
         linkids_str=getLinkIdsString(data.fkey_data.vlan_len,data.fkey_tags.vlan_buff); 
 	key=getFlowPathKey(&data);
 	cout << "User: Received flow with key  : " << key << "\n";
-        
+                
+
 	pthread_mutex_lock(&mtx);
         if(!insert){
             cit = conn.find(key);
@@ -421,12 +443,14 @@ int decodepath(flow_stats_t data){
 int main(int argc, char* argv[])
 {	
     if (argc < 2) {
-	std::cerr << "Usage: " << argv[0] << " K-ary value of fat-tree" << endl;
-	std::cerr << "Example: \"./flow-mon 4\" (for 4-ary fat-tree)" << std::endl;
+	std::cerr << "Usage: " << argv[0] << " <K-ary value of fat-tree> <interface-name>" << endl;
+	std::cerr << "Example: \"./flow-mon 4 eth1\" (for 4-ary fat-tree and eth1 as listening interface) " << std::endl;
 	return 1;
 	}
     vector<pthread_t *> vt;
     decode d(std::stoi(argv[1]));
+    ipaddr=getIPAddress(std::string(argv[2]));
+    cout << "Interface address " << ipaddr << endl;
     D=&d;
     pthread_t thread1,thread2;
     publisher.bind("tcp://*:5556");
