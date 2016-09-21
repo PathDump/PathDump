@@ -35,14 +35,14 @@ class phy_switch():
             table = br.cherrytable
             self.addstubFlows(br,table)
             if br.type == "ToR":
-                self.forw_inst.addTorFlows(br)
                 self.cherry_inst.addTorCherryFlows(br)
+                self.forw_inst.addTorFlows(br)
             elif br.type=="Agg":
-                self.forw_inst.addAggFlows(br)
                 self.cherry_inst.addAggCherryFlows(br)
+                self.forw_inst.addAggFlows(br)
             elif br.type=="Core":
-                self.forw_inst.addCoreFlows(br)
                 self.cherry_inst.addCoreCherryFlows(br)
+                self.forw_inst.addCoreFlows(br)
 
     def update_bridges(self):
         self.add_bridges()
@@ -149,7 +149,6 @@ if __name__ == "__main__":
             fh=open(dst_path+"add-flows_"+phy_node+".sh",'w')
             phy_switch_inst = phy_switch(phy_node, virt_nodes, edgeInfo, fh)
             phy_switch_inst.add_flows()
-            fh=open(dst_path+"add-flows_"+phy_node+".sh",'w')
             fh=open(dst_path+"del-flows_"+phy_node+".sh",'w')
             phy_switch_inst = phy_switch(phy_node, virt_nodes, edgeInfo, fh)
             phy_switch_inst.del_flows()

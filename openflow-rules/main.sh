@@ -5,8 +5,8 @@ add_flows(){
     for var in ${node_list[*]}
     do
        echo "serving "$var
-       ssh admin@$var$suffix < ./script/del-flows_$var.sh
-       ssh admin@$var$suffix < ./script/add-flows_$var.sh
+       ssh admin@$var < ./script/del-flows_$var.sh
+       ssh admin@$var < ./script/add-flows_$var.sh
    done
 }
 
@@ -14,21 +14,21 @@ add_bridges(){
     for var in ${node_list[*]}
     do
        echo "serving "$var
-       ssh admin@$var$suffix < ./script/del-br_$var.sh
-       ssh admin@$var$suffix < ./script/add-br_$var.sh
+       ssh admin@$var < ./script/del-br_$var.sh
+       ssh admin@$var < ./script/add-br_$var.sh
    done
 }
 
 del_bridges() {
-   for var in nsl100 nsl101 nsl102 nsl103 nsl104 nsl105
+   for var in ${node_list[*]}
    do
        echo "serving "$var
-       ssh admin@$1 < ./script/del-br_$var.sh
+       ssh admin@$var < ./script/del-br_$var.sh
    done
 }
 
 del_flows(){
-   for var in nsl100 nsl101 nsl102 nsl103 nsl104 nsl105
+   for var in ${node_list[*]}
    do
        echo "serving "$var
        ssh admin@$var < ./script/del-flows_$var.sh
@@ -37,7 +37,7 @@ del_flows(){
 
 
 reset(){
-   for var in nsl100 nsl101 nsl102 nsl103 nsl104 nsl105
+   for var in ${node_list[*]}
    do
        echo "serving "$var
        ssh admin@$var < ./script/del-flows_$var.sh

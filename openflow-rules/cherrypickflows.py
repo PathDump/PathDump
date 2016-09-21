@@ -1,9 +1,3 @@
-
-mac_addr = "d4:ae:52:d2:5f:c0"
-mask_addr = "ff:ff:ff:00:00:00"
-dl_src=mac_addr+"/"+mask_addr
-
-
 class CherryPickFlows():
     def __init__(self,file,edgeInfo):
         self.file=file
