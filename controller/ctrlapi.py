@@ -72,7 +72,7 @@ def buildReq (api, tree, query, aggcode=None, interval=None):
     req.update ({'query': query})
     if aggcode:
         req.update ({'aggcode': aggcode})
-    if interval:
+    if interval is not None:
         req.update ({'interval': interval})
     return req
 
@@ -154,7 +154,7 @@ def getPoorTCPFlow():
         flowcoll.init (dirpath)
 
     try:
-        flow = flowcoll.getFlowRecord()
+        flow = flowcoll.getFlowRecord('POOR_PERF')
     except KeyboardInterrupt:
         flowcoll.cleanup()
         raise

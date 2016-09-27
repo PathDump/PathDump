@@ -35,23 +35,25 @@ class MyHandler (FileSystemEventHandler):
             queuecv.notify()
             queuecv.release()
    
-def getFlowRecord():
+def getFlowRecord(reason):
     queuecv.acquire()
     while len (flowqueue) == 0:
         queuecv.wait(10.0)
     record = flowqueue.popleft()
     queuecv.release()
     tokens = record.split()
-    flow = {'flowid':{}, 'path': []}
-    flow['flowid']['sip']   = tokens[1]
-    flow['flowid']['sport'] = tokens[2]
-    flow['flowid']['dip']   = tokens[3]
-    flow['flowid']['dport'] = tokens[4]
-    flow['flowid']['proto'] = tokens[5]
-    for i in range (6, len(tokens)):
-        flow['path'].append (tokens[i])
+    if tokens[1] == reason:
+        flow = {'flowid':{}, 'path': []}
 
-    return flow
+        flow['flowid']['sip']   = tokens[2]
+        flow['flowid']['sport'] = tokens[3]
+        flow['flowid']['dip']   = tokens[4]
+        flow['flowid']['dport'] = tokens[5]
+        flow['flowid']['proto'] = tokens[6]
+        for i in range (7, len(tokens)):
+            flow['path'].append (tokens[i])
+
+        return flow
 
 def init (dirpath):
     global observer, started, start_time

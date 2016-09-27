@@ -65,12 +65,13 @@ def postflow_handler ():
             # FOR TEST ONLY
             query = {'name': 'retrieve_flow.py', 'argv': [fid, timeRange]}
             data = ctrlapi.execQuery (tree, query)
-            save_flowrecord (fid, data)
+            save_flowrecord (reason, fid, data)
         elif reason == 'PC_FAIL':
             # TODO: NEED TO HANDLE THIS CASE
+            save_flowrecord(reason, fid, paths) 
             continue
 
-def save_flowrecord (fid, data):
+def save_flowrecord (reason, fid, data):
     global logfp
 
     if not logfp: return
@@ -83,7 +84,7 @@ def save_flowrecord (fid, data):
     str_fid = sip + ' ' + sport + ' ' + dip + ' ' + dport + ' ' + proto
     for d in data:
         str_path = concat_path (d['path'])
-        output = str(time.time()) + ' ' + str_fid + ' ' + str_path + '\n'
+        output = str(time.time()) + ' ' + reason + ' ' + str_fid + ' ' + str_path + '\n'
         logfp.write (output)
 
 def concat_path (path):

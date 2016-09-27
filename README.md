@@ -6,7 +6,7 @@ PathDump
 ## Dependency
 * Python 2.7+
 * Python Watchdog module 0.8.3
-* Linux Kernel 3.x <-- Fix me!
+* Linux Kernel 3.13.0-32-generic
 * Open vSwitch 2.3.90: http://openvswitch.org/
 * MongoDB: https://www.mongodb.org/
 * MongoDB Legacy C++ Driver 1.1.2: https://github.com/mongodb/mongo-cxx-driver/releases/tag/legacy-1.1.2
