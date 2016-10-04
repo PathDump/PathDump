@@ -1,3 +1,14 @@
+#Phyical switch ip address
+    #Vitural bridge id in that physical switch
+        #Level of bridge in the fat-tree topology
+        #Pod number
+        #Pos of bridge
+        #ipaddress of bridge
+        #datapath id used to create virtual bridge
+        #up: ports connected to upper bridges
+        #down: ports connected to down bridges
+
+#Below config is for 4-ary fat-tree topology. Find the diagram in 4-ary-fat-tree.jpg.
 nodes:
     - nsl105:
         1 :
