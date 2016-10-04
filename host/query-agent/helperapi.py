@@ -9,9 +9,13 @@ import pathdumpapi as pdapi
 from threading import Thread
 import time
 import socket
+import zmq
 
 cwd = os.getcwd()
-
+subsURL = "tcp://localhost:5556"
+subsFilter = "TIB "
+subsQueries={}
+subsSocket=None
 instQueries = {}
 
 def buildFlowidFilter (flowID):
@@ -97,6 +101,47 @@ def getCurNodeID ():
 def wrapper (func, args, results):
     results.append (func (*args))
 
+def initializeSubscription():
+    global subsSocket,subsURL,subsFilter
+    
+    if subsSocket == None:
+        #  Socket to subscribe for flow records
+        context = zmq.Context()                                                                      
+        subsSocket = context.socket(zmq.SUB)
+        subsSocket.connect(subsURL)                          
+        fltr=subsFilter
+        # Python 2 - ascii bytes to unicode str
+        if isinstance(fltr, bytes):
+            fltr = fltr.decode('ascii')
+        print("Collecting flow stats host agent",subsURL,fltr)
+        subsSocket.setsockopt_string(zmq.SUBSCRIBE, fltr)
+
+def execSubsQueries(argv):
+    global subsQueries,subsSocket,instQueries
+    for qname in subsQueries.keys():
+        if qname in instQueries and instQueries[qname]:
+            runQuery(subsQueries[qname], argv)
+        else:
+            del subsQueries[qname]
+            del instQueries[qname]
+            if len(subsQueries)==0:
+                print "NO queries subscribed for flows. Closing socket"
+                subsSocket.close()
+                subsSocket=None
+
+def listenRecords(filter_str):
+    while True and len(subsQueries) > 0:
+        print "listening for records"
+        msg = subsSocket.recv_string() 
+        flow_record = json.loads(msg[len(filter_str):])  
+        execSubsQueries(flow_record)
+
+def runQuery(source, argv):
+    filepath = cp.options['repository'] + '/' + source['name']
+    module = imp.load_source ('', filepath)
+    # module must implement 'run' function
+    return module.run (argv)
+
 def processTIB (source, collection):
     filepath = cp.options['repository'] + '/' + source['name']
     module = imp.load_source ('', filepath)
@@ -161,14 +206,18 @@ def installQuery (query, interval):
         return [{getCurNodeID(): False}]
 
     instQueries[qname] = True
+    print "Installing query ",qname
     if interval > 0.0:
         t = Thread (target = schedQuery, args = (qname, interval, processTIB,
                                                  (query, pdapi.collection)))
         t.start()
-    else:
-        # NEED TO BE HANDLED LATER
+    elif interval==0.0:
         # data should be a stream of TIB records being exported from memory
-        return [{getCurNodeID(): True}]
+        subsQueries[qname]=query
+        if len(subsQueries)==1:
+            initializeSubscription()
+            t = Thread (target=listenRecords, args =(subsFilter,))
+            t.start()
     return [{getCurNodeID(): True}]
 
 def uninstallQuery (qname):
@@ -177,6 +226,8 @@ def uninstallQuery (qname):
     # no need for tight synchronization, so no locking mechanism is implemented
     if qname in instQueries:
         instQueries[qname] = False
+    print "Uninstalling query ",qname
+    print "Current installed queries",instQueries
 
     return [{getCurNodeID(): True}]
 
