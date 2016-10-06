@@ -31,7 +31,7 @@ sudo pip install pyzmq
 git clone https://github.com/openvswitch/ovs.git
 pushd ovs
 git checkout abcf3ef4c3f75963f46a11501685363e3ceb7c0e
-git apply ../../host/ovs-patch/ovs-linux-kernel.patch
+git apply ../../host/ovs/ovs-linux-kernel.patch
 ./boot.sh
 ./configure --with-linux=/lib/modules/`uname -r`/build
 make -j 8

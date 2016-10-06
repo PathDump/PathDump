@@ -7,7 +7,7 @@ rmmod openvswitch
 modprobe libcrc32c
 modprobe vxlan
 modprobe gre
-insmod $(pwd)/ovs/datapath/linux/openvswitch.ko
+insmod $(pwd)/../../tmpbuild/ovs/datapath/linux/openvswitch.ko
 ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
              --remote=db:Open_vSwitch,Open_vSwitch,manager_options \
              --private-key=db:Open_vSwitch,SSL,private_key \
