@@ -2,13 +2,19 @@
 {
  "gid": "controller",
  "host": [],
- "child": ["g1", "g3", "g4"]
+ "child": ["g1", "g2", "g3", "g4"]
 },
 
 {
  "gid": "g1",
- "host": ["nsl005", "nsl006"],
- "child": ["g11"]
+ "host": ["nsl003", "nsl004", "nsl005", "nsl006"],
+ "child": ["g11", "g12"]
+},
+
+{
+ "gid": "g2",
+ "host": ["nsl007", "nsl008", "nsl009", "nsl010"],
+ "child": ["g21", "g22"]
 },
 
 {
@@ -19,19 +25,37 @@
 
 {
  "gid": "g4",
- "host": ["nsl017","nsl018"],
- "child": ["g41"]
+ "host": ["nsl015", "nsl016", "nsl017","nsl018"],
+ "child": ["g41", "g42"]
 },
 
 {
  "gid": "g11",
+ "host": ["nsl003", "nsl004"],
+ "child": []
+},
+
+{
+ "gid": "g12",
  "host": ["nsl005", "nsl006"],
  "child": []
 },
 
 {
+ "gid": "g21",
+ "host": ["nsl007", "nsl008"],
+ "child": []
+},
+
+{
+ "gid": "g22",
+ "host": ["nsl009", "nsl010"],
+ "child": []
+},
+
+{
  "gid": "g31",
- "host": ["nsl011","nsl012"],
+ "host": ["nsl011", "nsl012"],
  "child": []
 },
 
@@ -43,8 +67,13 @@
 
 {
  "gid": "g41",
- "host": ["nsl017", "nsl018"],
+ "host": ["nsl015", "nsl016"],
  "child": []
 },
 
+{
+ "gid": "g42",
+ "host": ["nsl017", "nsl018"],
+ "child": []
+}
 ]

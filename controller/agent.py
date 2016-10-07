@@ -50,12 +50,10 @@ def initialize ():
         os.makedirs (cp.options['home']+'/'+cp.options['collection'])
 
     aggtree.buildGroupTree (cp.options['home']+'/'+cp.options['grouptree'])
-    print 'aggtree.grouptree:', aggtree.grouptree
 
 if __name__ == '__main__':
     initialize ()
     app.run (debug = True, host = "0.0.0.0")
 
-    # The following doesn't work in a docker setup;
     # TODO: Run tests in a host OS
     # app.run (debug = True, host = "0.0.0.0", processes = 2)

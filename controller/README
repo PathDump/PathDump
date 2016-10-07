@@ -1,0 +1,21 @@
+----------------
+# HOW TO INSTALL
+----------------
+
+sudo ./install.sh <directory>
+
+------------
+# HOW TO RUN
+------------
+
+Go to the directory that the controller is installed, and run:
+
+sudo python agent.py <config file>
+
+------------------
+# ADDITIONAL NOTES
+------------------
+
+An example configuration file is config/controller/pathdump.cfg. This
+configuration file is copied to the specified installation directory during
+the installation process. 
