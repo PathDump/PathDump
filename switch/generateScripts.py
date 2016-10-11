@@ -1,9 +1,11 @@
+#!/usr/bin/python
 '''
 Created on 30 Mar 2015
 
 @author: praveen
 '''
 import os
+import sys
 import time
 from forwarding import Forwarding
 from cherrypickflows import CherryPickFlows
@@ -140,10 +142,16 @@ class labSetup():
         phy_switch_inst.del_groups()
 
 if __name__ == "__main__":
-    yml_file="../config/topology.yaml"
+    if len (sys.argv) != 2:
+        print "Please specify the topology file"
+        exit (1)
+
+    yml_file=sys.argv[1]
     topo=yaml.load(open(yml_file,'r'))
     edgeInfo = topo['edges']
     dst_path = "./script/"
+    if not os.path.exists (dst_path):
+        os.makedirs (dst_path)
     for nodes in topo['nodes']:
         for phy_node, virt_nodes in nodes.items():
             fh=open(dst_path+"add-flows_"+phy_node+".sh",'w')
@@ -158,14 +166,3 @@ if __name__ == "__main__":
             fh=open(dst_path+"del-br_"+phy_node+".sh",'w')
             phy_switch_inst = phy_switch(phy_node, virt_nodes, edgeInfo, fh)
             phy_switch_inst.del_bridges()
-
-
-
-
-
-
-
-
-
-
-
