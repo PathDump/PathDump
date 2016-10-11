@@ -1,0 +1,23 @@
+==========================
+# HOW TO CREATE FLOW RULES
+==========================
+
+./generateScripts.py <topology file>
+
+The script creates two types of rules; i) forwarding rules and ii) CherryPick
+rules (the rules to tag switches IDs in order to trace packet trajectory).
+
+An example topology file is given in config/topology.yaml. Note that the
+topology describes the testbed setup used by the PathDump team at the
+University of Edinburgh.
+
+===========================
+# HOW TO INSTALL FLOW RULES
+===========================
+
+./install_rules.sh
+
+Note that this script is also tailored for the testbed setup at the University
+of Edinburgh. The testbed comprises of Pica8 switches, which support SSH. This
+script installs the generated flow rules via SSH. Hence, it is quite handy to
+set up an SSH key at those switches.
