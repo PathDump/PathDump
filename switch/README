@@ -15,7 +15,9 @@ University of Edinburgh.
 # HOW TO INSTALL FLOW RULES
 ===========================
 
-./install_rules.sh
+./install_rules.sh -r
+
+To show help menu, run ./install_rules.sh -h.
 
 Note that this script is also tailored for the testbed setup at the University
 of Edinburgh. The testbed comprises of Pica8 switches, which support SSH. This
