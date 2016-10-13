@@ -1,3 +1,16 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Please specify the home directory for PathDump"
+    exit 1
+fi
+
+home=$1
+
+if [ ! -d "$home" ]; then
+    mkdir $home
+fi
+
 mkdir tmpbuild
 pushd tmpbuild
 
@@ -35,6 +48,17 @@ git apply ../../ovs/ovs-linux-kernel.patch
 ./boot.sh
 ./configure --with-linux=/lib/modules/`uname -r`/build
 make -j 8
+make modules_install
 popd
 
 popd
+
+pushd flow-mon
+make
+popd
+
+cp -f ./query-agent/* $home
+cp -f ./flow-mon/bin/flowmon $home
+cp -f ./ovs/start_vswitch.sh $home
+cp -f ./tmpbuild/ovs/datapath/linux/openvswitch.ko $home
+cp -f ../config/host/pathdump.cfg $home
