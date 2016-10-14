@@ -59,6 +59,6 @@ popd
 
 cp -f ./query-agent/* $home
 cp -f ./flow-mon/bin/flowmon $home
-cp -f ./ovs/start_vswitch.sh $home
+cp -f ./ovs/*.sh $home
 cp -f ./tmpbuild/ovs/datapath/linux/openvswitch.ko $home
 cp -f ../config/host/pathdump.cfg $home
