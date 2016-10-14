@@ -3,8 +3,7 @@
 # directory. So run this script with sudo permissions.
 
 kill `cd /usr/local/var/run/openvswitch && cat ovsdb-server.pid ovs-vswitchd.pid`
-#make
-#make modules_install
+
 rmmod openvswitch
 modprobe libcrc32c
 modprobe vxlan

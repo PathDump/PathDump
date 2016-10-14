@@ -1,4 +1,16 @@
 #!/bin/bash
+#
+# This script creates and configures a bridge.
+#
+# Caveat: The script is written for a testbed at the University of Edinburgh.
+# Depending on the conditions (e.g., topology, # of servers, etc.) of a test
+# network, this script may need modification or users need to write their own
+# script. At a minimum, there are two parameters that reqiures attention. The
+# first parameter is a physical interface name (e.g., eth1) which a bridge is
+# attached to; the second parameter is a OpenFlow controller's IP address and
+# port number (e.g., 129.215.164.111:6633). Before this script is executed,
+# these parameters should be changed accordingly.
+#
 
 declare -A name_to_ip
 declare -A ip_to_mac
@@ -28,6 +40,7 @@ ip_to_mac=(
 setup()
 {
     ovs-vsctl add-br br0
+    # set controller
     ovs-vsctl set-controller br0 tcp:129.215.164.111:6633
     ovs-vsctl add-port br0 eth1
     ovs-vsctl add-port br0 vnet0 -- set interface vnet0 type=internal
@@ -41,7 +54,7 @@ setup()
     macaddr=${ip_to_mac[$ip]}
     echo $ip $macaddr
 
-    ifconfig eth1 0
+    ifconfig eth1 down
     ifconfig vnet0 up
     ifconfig vnet0 $ip
     ifconfig vnet0 hw ether $macaddr
