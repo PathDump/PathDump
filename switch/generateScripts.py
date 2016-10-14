@@ -13,6 +13,8 @@ import random
 import math
 import yaml
 
+forwarding_only = False
+
 class phy_switch():
     def __init__(self, name, virt_nodes, edgeInfo, file):
         self.name=name
@@ -34,16 +36,22 @@ class phy_switch():
         if len(self.bridges)==0:
             self.update_bridges()
         for br in self.bridges:
-            table = br.cherrytable
+            if forwarding_only:
+                table = br.frwdtable
+            else:
+                table = br.cherrytable
             self.addstubFlows(br,table)
             if br.type == "ToR":
-                self.cherry_inst.addTorCherryFlows(br)
+                if not forwarding_only:
+                    self.cherry_inst.addTorCherryFlows(br)
                 self.forw_inst.addTorFlows(br)
             elif br.type=="Agg":
-                self.cherry_inst.addAggCherryFlows(br)
+                if not forwarding_only:
+                    self.cherry_inst.addAggCherryFlows(br)
                 self.forw_inst.addAggFlows(br)
             elif br.type=="Core":
-                self.cherry_inst.addCoreCherryFlows(br)
+                if not forwarding_only:
+                    self.cherry_inst.addCoreCherryFlows(br)
                 self.forw_inst.addCoreFlows(br)
 
     def update_bridges(self):
@@ -142,11 +150,14 @@ class labSetup():
         phy_switch_inst.del_groups()
 
 if __name__ == "__main__":
-    if len (sys.argv) != 2:
+    if len (sys.argv) < 2:
         print "Please specify the topology file"
         exit (1)
 
     yml_file=sys.argv[1]
+    if len (sys.argv) == 3 and sys.argv[2] == '-f':
+        forwarding_only = True
+
     topo=yaml.load(open(yml_file,'r'))
     edgeInfo = topo['edges']
     dst_path = "./script/"
