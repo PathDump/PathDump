@@ -54,7 +54,7 @@ setup()
     macaddr=${ip_to_mac[$ip]}
     echo $ip $macaddr
 
-    ifconfig eth1 down
+    # ifconfig eth1 down
     ifconfig vnet0 up
     ifconfig vnet0 $ip
     ifconfig vnet0 hw ether $macaddr
