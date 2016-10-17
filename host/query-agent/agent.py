@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from flask import Flask
 from flask import make_response
 from flask import abort
