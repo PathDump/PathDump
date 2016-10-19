@@ -173,3 +173,22 @@ def getPolicyViolationFlow():
         raise
 
     return flow
+
+def registerQuery (filepath):
+    filename = os.path.basename (filepath)
+
+    try:
+        with open (filepath, 'r') as f:
+            filedata = f.read()
+    except EnvironmentError:
+        return [False]
+
+    req = {'api': 'registerQuery'}
+    req.update ({'name': filename})
+    req.update ({'data': filedata})
+
+    resp, content = r.get (controller, json.dumps (req, default=json_util.default), "pathdump")
+    if resp['status'] != '200':
+        return []
+    else:
+        return json.loads (content, object_hook=json_util.object_hook)

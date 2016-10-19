@@ -50,6 +50,10 @@ def handlerequest (req, url):
     elif req['api'] == 'getFlowCollDir':
         colldir = cp.options['home'] + '/' + cp.options['collection']
         return json.dumps ([colldir], default=json_util.default)
+    elif req['api'] == 'registerQuery':
+        repodir = cp.options['home'] + '/' + cp.options['repository']
+        retval = save_file (req['filename'], req['data'])
+        return json.dumps ([retval], default=json_util.default)
 
     return execRequest (req, url)
 
@@ -80,3 +84,13 @@ def load_file (filename):
     filepath = cp.options['home']+'/'+cp.options['repository']+'/'+filename
     with open (filepath, 'r') as f:
         return f.read()
+
+def save_file (filename, data):
+    filepath = cp.options['home']+'/'+cp.options['repository']+'/'+filename
+    try:
+        with open (filepath, 'w') as f:
+            f.write (data)
+    except EnvironmentError:
+        return False
+
+    return True
