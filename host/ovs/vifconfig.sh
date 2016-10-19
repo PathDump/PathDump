@@ -55,6 +55,7 @@ setup()
     echo $ip $macaddr
 
     ifconfig eth1 up
+    ifconfig eth1 0
     ifconfig vnet0 up
     ifconfig vnet0 $ip
     ifconfig vnet0 hw ether $macaddr
