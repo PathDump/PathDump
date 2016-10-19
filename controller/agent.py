@@ -12,7 +12,7 @@ import confparser as cp
 import aggtree
 import os
 import shutil
-import hashlib
+import myutil
 
 
 app = Flask(__name__)
@@ -41,13 +41,6 @@ def getpathdumpget():
         content = pq.handlerequest (request.json, "pathdump")
         return content
 
-def md5 (fname):
-    hash_md5 = hashlib.md5()
-    with open (fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update (chunk)
-    return hash_md5.hexdigest()
-
 def initialize ():
     if len (sys.argv) == 2:
         cp.parse_config (sys.argv[1])
@@ -57,7 +50,7 @@ def initialize ():
     if not os.path.exists (directory):
         os.makedirs (directory)
         shutil.copy ('retrieve_flow.py', directory + '/retrieve_flow.py')
-        md5val = md5('retrieve_flow.py')
+        md5val = myutil.md5('retrieve_flow.py')
         md5file = directory + '/retrieve_flow.py.md5'
         with open (md5file, "w") as f:
             f.write (md5val + '\n')

@@ -6,6 +6,7 @@ import confparser as cp
 import os
 import postflow as pf
 import aggtree
+import myutil
 
 results=[]
 
@@ -18,12 +19,14 @@ def httpcmd (server, req, url):
 def handlerequest (req, url):
     if req['api'] == 'check_source':
         md5file = req['name'] + '.md5'
-        req.update ({'checksum': load_file (md5file)})
+        filepath = cp.options['home']+'/'+cp.options['repository']+'/'+md5file
+        req.update ({'checksum': myutil.load_file (filepath)})
     elif req['api'] == 'send_source':
         srcfile = req['name']
-        req.update ({'file': load_file (srcfile)})
-        md5file = srcfile + '.md5'
-        req.update ({'checksum': load_file (md5file)})
+        filepath = cp.options['home']+'/'+cp.options['repository']+'/'+srcfile
+        req.update ({'file': myutil.load_file (filepath)})
+        filepath = filepath + '.md5'
+        req.update ({'checksum': myutil.load_file (filepath)})
    # This api should be called only from queries installed in host 
     elif req['api'] == 'postFlow':
         # initialize a thread if it is not already done
@@ -51,8 +54,11 @@ def handlerequest (req, url):
         colldir = cp.options['home'] + '/' + cp.options['collection']
         return json.dumps ([colldir], default=json_util.default)
     elif req['api'] == 'registerQuery':
-        repodir = cp.options['home'] + '/' + cp.options['repository']
-        retval = save_file (req['filename'], req['data'])
+        filepath = cp.options['home']+'/'+cp.options['repository']+'/'+req['name']
+        retval = myutil.save_file (filepath, req['data'])
+        if retval:
+            md5val = myutil.md5 (filepath)
+        retval = myutil.save_file (filepath + '.md5', md5val + '\n')
         return json.dumps ([retval], default=json_util.default)
 
     return execRequest (req, url)
@@ -80,17 +86,3 @@ def execRequest (req, url):
     results = []
     return json.dumps (data, default=json_util.default)
 
-def load_file (filename):
-    filepath = cp.options['home']+'/'+cp.options['repository']+'/'+filename
-    with open (filepath, 'r') as f:
-        return f.read()
-
-def save_file (filename, data):
-    filepath = cp.options['home']+'/'+cp.options['repository']+'/'+filename
-    try:
-        with open (filepath, 'w') as f:
-            f.write (data)
-    except EnvironmentError:
-        return False
-
-    return True

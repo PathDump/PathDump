@@ -10,3 +10,4 @@ if __name__ == "__main__":
     filename = sys.argv[1]
 
     data = capi.registerQuery (filename)
+    print data
