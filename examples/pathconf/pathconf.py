@@ -10,7 +10,15 @@ if __name__ == "__main__":
     
     if len (sys.argv) == 2 and sys.argv[1] == 'uninstall':
         data = capi.uninstallQuery (tree, query)
-    else:
-        data = capi.installQuery (tree, query, interval) 
+        exit (0)
 
-    
+    data = capi.installQuery (tree, query, interval) 
+
+    print data
+
+    while True:
+        try:
+            flow = capi.getPolicyViolationFlow()
+            print 'violoating a path policy:', flow
+        except KeyboardInterrupt:
+            exit (0)
