@@ -160,3 +160,16 @@ def getPoorTCPFlow():
         raise
 
     return flow
+
+def getPolicyViolationFlow():
+    if not flowcoll.started:
+        dirpath = getFlowCollectionDir()
+        flowcoll.init (dirpath)
+
+    try:
+        flow = flowcoll.getFlowRecord('PC_FAIL')
+    except KeyboardInterrupt:
+        flowcoll.cleanup()
+        raise
+
+    return flow
