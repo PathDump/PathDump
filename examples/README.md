@@ -3,7 +3,7 @@
 Some of example debugging applications supported by PathDump. To run an
 application, the PathDump controller and the end-host agent must be running.
 
-## Registration of query
+## Query registration 
 
 A debugging application consists of a front-end interface Python script (and a
 query (or two queries)). If a debugging application has a query (or queries),
