@@ -95,4 +95,4 @@ import sys
 sys.path.insert (0, '<pathdump_directory>')
 ```
 
-\<pathdump_directory\> is the directory where the controller is installed.
+\<pathdump_directory\> is the directory path where the controller is installed.
