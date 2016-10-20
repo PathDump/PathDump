@@ -1,5 +1,6 @@
 import ctrlapi as capi
 import heapq
+import sys
 
 def aggregate (topk, data):
     h = []
@@ -10,7 +11,11 @@ def aggregate (topk, data):
     return h
 
 if __name__ == "__main__":
-    topk = 10
+    if len (sys.argv) == 2:
+        topk = int (sys.argv[1])
+    else:
+        topk = 10
+
     linkID = ('*', '*')
     timeRange = ('*', '*')
     query = {'name': 'topk_query.py', 'argv': [topk, linkID, timeRange]}
