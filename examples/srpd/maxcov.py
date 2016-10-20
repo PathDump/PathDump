@@ -5,6 +5,7 @@
 #
 #
 import ctrlapi as capi
+import sys
 
 class maxcov():
     def __init__ (self, thresh):
@@ -76,8 +77,19 @@ class maxcov():
         return candidates
 
 if __name__ == "__main__":
-    algo = maxcov (10)
+    query = {'name': 'poortcp_query.py', 'argv': [2]}
 
+    tree = capi.getAggTree (['controller'])
+    if len (sys.argv) == 2 and sys.argv[1] == 'uninstall':
+        data = capi.uninstallQuery (tree, query)
+        exit (0)
+
+    # every 200ms, poortcp_query.py will be executed
+    interval = 0.2
+    retval = capi.installQuery (tree, query, interval)
+    print retval
+
+    algo = maxcov (10)
     while True:
         try:
             flow = capi.getPoorTCPFlow()
