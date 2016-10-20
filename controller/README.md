@@ -6,7 +6,6 @@ Python implementation of PathDump controller.
 
 ```
 sudo ./install.sh <directory>
-
 ```
 
 <directory> is the target directory to install the controller module. If the
