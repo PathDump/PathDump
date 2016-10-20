@@ -1,24 +1,27 @@
+#
+# Path conformance application checks paths in each flow record. As an example,
+# it treats a path with length > 6 (including links of src->ToR and ToR->dst)
+# as abnormal and raises an alarm to the controller.
+#
+#
 import ctrlapi as capi
 import sys
 
-#Pathconformance application checks paths in each flow record. For simplicity, this app define path with length > 4 as abnormal and
-#raises alarm to controller.
 if __name__ == "__main__":
-    tree = capi.getAggTree (['controller'])
-    interval = 0.0
     query = {'name': 'pathconf_check.py', 'argv': []}
-    
+
+    tree = capi.getAggTree (['controller'])
     if len (sys.argv) == 2 and sys.argv[1] == 'uninstall':
         data = capi.uninstallQuery (tree, query)
         exit (0)
 
-    data = capi.installQuery (tree, query, interval) 
-
-    print data
+    interval = 0.0
+    retval = capi.installQuery (tree, query, interval) 
+    print retval
 
     while True:
         try:
             flow = capi.getPolicyViolationFlow()
-            print 'violoating a path policy:', flow
+            print 'Violating a path policy:', flow
         except KeyboardInterrupt:
             exit (0)
