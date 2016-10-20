@@ -66,7 +66,7 @@ sudo ./registerquery.py <path_to_example>/pathconf_check.py
 sudo python pathconf.py <command>
 ```
 
-Options for <command>: install or uninstall. 'install' makes the query
+Options for \<command\>: install or uninstall. 'install' makes the query
 (pathconf_check.py) get installed in end-hosts that subsequently run the query
 forever until it gets uninstalled. When the policy on path is violated, the
 script returns flows and their corresponding paths that violate the policy.
