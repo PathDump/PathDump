@@ -77,6 +77,35 @@ To uninstall the query:
 sudo python pathconf.py uninstall
 ```
 
+### Example 3: Silent random packet drops
+
+This application collects IDs of TCP flows that perform poorly in terms of
+retransmission and diagnoses potential faulty interfaces that drops packets
+silently and randomly. The application consists of two scripts -- maxcov.py
+(front-end script) and poortcp_query.py (actual query exeucted in end-hosts).
+
+First, to register poortcp_query.py:
+
+```
+sudo ./registerquery.py <path_to_example>/poortcp_query.py
+```
+
+```
+sudo python maxcov.py <command>
+```
+
+Options for \<command\>: install or uninstall. 'install' makes the query
+(poortcp_query.py) get installed in end-hosts that subsequently run the query
+every 200ms (the value can be modified in the maxcov.py script) until it gets
+uninstalled. When the script collects TCP flows that perform poorly, it returns
+IDs of those flows to the controller.
+
+To uninstall the query:
+
+```
+sudo python maxcov.py uninstall
+```
+
 ## Dependency
 
 Any front-end Python script (e.g., topk.py) requires ctrlapi module as it
