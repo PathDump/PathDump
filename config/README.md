@@ -11,6 +11,11 @@ During the installation process for the respective system (controller or
 end-host), necessary configuration files will be copied. Afterwards, the
 configuration files may need to be updated depending on the actual setup.
 
+## Testbed topology
+
+![Testbed topology](fattree.png)
+
 ## Dependency
 
 There is no dependency.
+

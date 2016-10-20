@@ -6,10 +6,9 @@ Python implementation of PathDump controller.
 
 ```
 sudo ./install.sh <directory>
-
 ```
 
-<directory> is the target directory to install the controller module. If the
+\<directory\> is the target directory to install the controller module. If the
 user has write permission on the target directory, 'sudo' can be omitted.
 
 ## How to run
@@ -20,7 +19,7 @@ Go to the directory that the controller is installed, and run:
 sudo ./agent.py <config file>
 ```
 
-A configuration file (<config file>) should be specified. 'sudo' can be omitted
+A configuration file (\<config file\>) should be specified. 'sudo' can be omitted
 again if the user owns the directory.
 
 ## Dependency
