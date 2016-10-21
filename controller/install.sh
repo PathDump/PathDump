@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# install watchdog python package using pip
+# install external python packages using pip
+pip install Flask
 pip install watchdog
 
 if [ "$#" -ne 1 ]; then
