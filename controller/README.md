@@ -19,13 +19,13 @@ Go to the directory that the controller is installed, and run:
 sudo ./agent.py <config file>
 ```
 
-A configuration file (\<config file\>) should be specified. 'sudo' can be omitted
-again if the user owns the directory.
+A configuration file (\<config file\>) should be specified. 'sudo' can be
+omitted again if the user owns the directory.
 
 ## Dependency
 
-An external Python package called 'watchdog' is required. The installation
-script attempts to install the package using pip.
+External Python packages (Flask and watchdog) are required. The installation
+script attempts to install the packages using pip.
 
 ## Additional notes
 

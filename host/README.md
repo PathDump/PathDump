@@ -20,10 +20,40 @@ sudo ./install.sh <directory>
 has write permission on the target directory, 'sudo' can be omitted.
 
 
+## How to run
+
+First, go to the directory that all of the modules are installed.
+The following shows an example for configuring and running host modules:
+
+```
+sudo ./start_vswitch.sh
+sudo ./vifconfig.sh -s
+sudo ./flowmon <k> <interface name> &
+sudo ./agent.py <config file>
+```
+
+The script, vifconfig.sh is is written for a testbed at the University of
+Edinburgh. Depending on the conditions (e.g., topology, # of servers, etc.) of a
+test network, the script may need modification or users need to write their own
+script. At a minimum, there are two parameters that reqiures attention. The
+first parameter is a physical interface name (e.g., eth1) which a bridge is
+attached to; the second parameter is a OpenFlow controller's IP address and port
+number (e.g., 129.215.164.111:6633). Before the script is executed, these
+parameters should be changed accordingly.
+
+For flowmon, \<k\> is the number of interfaces that a switch has in a *k*-ary
+fat-tree topology and \<interface name\> refers to a name of a local interface.
+For example, with k=4 and local interface is vnet0, run ./flowmon 4 vnet0.
+
+For agent.py, \<config file\> is a PathDump host configuration file. An example
+configuration file (pathdump.cfg) is in config/host. This configuration file is
+copied to the specified installation directory during the installation process.
+
 ## Dependency
 
 The installation script attempts to install all of the required software
-packages. The following software packages and Python packages are required:
+packages. Details of the required software packages and Python packages are as
+follows:
 
 * MongoDB (>= 3.0.6)
 * MongoDB Legacy C++ Driver 1.1.2
@@ -45,9 +75,5 @@ The OVS kernel module is patched and tested on Ubuntu 12.04.5 LTS (Kernel
 version: 3.13.0-32-generic).
 
 The 'tcpretrans' perl script is only used from the Perf-tools package. Hence,
-instead of installing the whole package, we only include the perl script in the
-PathDump source base.
-
-An example configuration file is config/host/pathdump.cfg. This configuration
-file is copied to the specified installation directory during the installation
-process.
+instead of installing the whole package, the perl script is already included in
+the PathDump source base.

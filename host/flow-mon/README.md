@@ -11,7 +11,7 @@ Note: flowmon is implemented (and tested) for k-ary fat-tree topology.
 sudo ./flowmon <k value> <interface name>
 ```
 
-For example with k=4 and local interface is vnet0, run ./flowmon 4 vnet0
+For example with k=4 and local interface is vnet0, run ./flowmon 4 vnet0.
 
 
 ## Additional notes
