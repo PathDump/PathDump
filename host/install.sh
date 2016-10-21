@@ -14,6 +14,9 @@ fi
 mkdir tmpbuild
 pushd tmpbuild
 
+# Install MongoDB using apt-get
+apt-get -y install mongodb
+
 # Install steps for mongo-cxx (note: mongo-c and libbson dependency is there)
 wget https://github.com/mongodb/mongo-cxx-driver/archive/legacy-1.1.2.zip
 unzip legacy-1.1.2.zip 
@@ -36,6 +39,9 @@ popd
 git clone https://github.com/zeromq/cppzmq
 pushd cppzmq && sudo cp zmq.hpp zmq_addon.hpp /usr/local/include/
 popd
+
+# install external python packages
+sudo pip install Flask
 sudo pip install pyyaml
 sudo pip install watchdog
 sudo pip install pyzmq
