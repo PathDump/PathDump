@@ -12,10 +12,10 @@ Openflow rule generation for tracing packet trajectory.
 in config/topology.yaml. Note that the topology describes the testbed setup used
 by the PathDump team at the University of Edinburgh.
 
-Without -f option, the script creates two types of rules; i) forwarding rules
-and ii) [CherryPick](http://dl.acm.org/citation.cfm?id=2775066) rules (the rules
-to tag switches IDs in order to trace packet trajectory). In order to create
-forwarding rules only, use -f flag.
+When -f option is omitted, the script creates two types of rules; i) forwarding
+rules and ii) [CherryPick](http://dl.acm.org/citation.cfm?id=2775066) rules (the
+rules to tag switches IDs in order to trace packet trajectory). In order to
+create simple forwarding rules only, use -f flag.
 
 
 ## How to install flow rules

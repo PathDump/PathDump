@@ -1,50 +1,23 @@
-PathDump
-========
+# PathDump
 
-## Building PathDump
+PathDump is a datacenter network debugger that partitions the debugging
+functionality between the edge devices and the network switches. This repository
+maintains the implementations of PathDump's core mechanisms and example
+debugging applications.
 
-## Dependency
-* Python 2.7+
-* Python Watchdog module 0.8.3
-* Linux Kernel 3.13.0-32-generic
-* Open vSwitch 2.3.90: http://openvswitch.org/
-* MongoDB: https://www.mongodb.org/
-* MongoDB Legacy C++ Driver 1.1.2: https://github.com/mongodb/mongo-cxx-driver/releases/tag/legacy-1.1.2
-* ZMQ: https://github.com/zeromq/libzmq 
-* Flask: http://flask.pocoo.org/
-* Ryu: http://osrg.github.io/ryu/
-* Perf-tools: https://github.com/brendangregg/perf-tools
+## Building and running PathDump
 
-## Folder structure
-```
-|-- controller
-|-- host
-   |--ovs-patch
-   |--flow-mon
-   |--query-agent
-|-- examples
-|-- config
-|-- README.md
-|-- LICENSE
-```
+PathDump comprises of three components: controller, end-host and switch.
+PathDump requires a dedicated machine for the controller component. The end-host
+module should be installed in every server in a datacenter network. Deploying
+switch rules can be done either the controller machine or any of the servers,
+and running the scripts one is sufficient.
 
-## Required package installation instructions
-* MongoDB build
-```
-unzip mongo-cxx-driver-legacy-1.1.2.zip 
-cd mongo-cxx-driver
-sudo scons --prefix /usr/local --c++11=on install
-```
-* Lib zeromq for c++ build
-```
-git clone https://github.com/zeromq/libzmq
-mkdir cmake-build && cd cmake-build
-cmake .. && make -j 4
-make test && make install && sudo ldconfig
-git clone https://github.com/zeromq/cppzmq
-cd cppzmq && sudo cp zmq.hpp zmq_addon.hpp /usr/local/include/
-```
-* Python Watchdog module
-```
-pip install watchdog
-```
+* To build, install and run the controller component, refer to
+[README](controller/README.md) under the controller directory.
+
+* To build, install and run the end-host component, refer to
+[README](host/README.md) under the host directory.
+
+* To configure and install switch rules at individual switches, refer to
+[README](switch/README.md) under the switch directory.
