@@ -15,36 +15,36 @@ mkdir tmpbuild
 pushd tmpbuild
 
 # Install MongoDB using apt-get
-apt-get -y install mongodb
+#apt-get -y install mongodb
 
 # Install steps for mongo-cxx (note: mongo-c and libbson dependency is there)
-wget https://github.com/mongodb/mongo-cxx-driver/archive/legacy-1.1.2.zip
-unzip legacy-1.1.2.zip 
-pushd mongo-cxx-driver-legacy-1.1.2
-sudo scons --prefix /usr/local --c++11=on install
-popd
+#wget https://github.com/mongodb/mongo-cxx-driver/archive/legacy-1.1.2.zip
+#unzip legacy-1.1.2.zip 
+#pushd mongo-cxx-driver-legacy-1.1.2
+#sudo scons --prefix /usr/local --c++11=on install
+#popd
 
 # Install steps for libzmq
-git clone https://github.com/zeromq/libzmq
-pushd libzmq
-./autogen.sh
-./configure     # add other options here
-make
-make check
-sudo make install
-sudo ldconfig
-popd
+#git clone https://github.com/zeromq/libzmq
+#pushd libzmq
+#./autogen.sh
+#./configure     # add other options here
+#make
+#make check
+#sudo make install
+#sudo ldconfig
+#popd
 
 #zmq cpp binding installation
-git clone https://github.com/zeromq/cppzmq
-pushd cppzmq && sudo cp zmq.hpp zmq_addon.hpp /usr/local/include/
-popd
+#git clone https://github.com/zeromq/cppzmq
+#pushd cppzmq && sudo cp zmq.hpp zmq_addon.hpp /usr/local/include/
+#popd
 
 # install external python packages
-sudo pip install Flask
-sudo pip install pyyaml
-sudo pip install watchdog
-sudo pip install pyzmq
+#sudo pip install Flask
+#sudo pip install pyyaml
+#sudo pip install watchdog
+#sudo pip install pyzmq
 
 # ovs checkout to older version, applies patch and then build
 git clone https://github.com/openvswitch/ovs.git
