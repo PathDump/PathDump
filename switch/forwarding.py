@@ -14,11 +14,25 @@ class Forwarding():
         
         priority -= 1
         start = 2 
-        for port in br.upports:
-            dstip = "10."+str(br.pod)+"."+str(br.pos)+"."+str(start)+"/0.0.0.255"
-            start +=1
-            add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_dst="+dstip+",actions=output:"+str(port)
+        if br.imbalance:
+            dstip = "10.1.1.2/0.0.255.255"
+            add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_dst="+dstip+",actions=output:"+str(br.upports[0])
             self.file.write(add_flow_cmd+"\n")
+            dstip = "10.1.2.2/0.0.255.255"
+            add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_dst="+dstip+",actions=output:"+str(br.upports[0])
+            self.file.write(add_flow_cmd+"\n")
+            dstip = "10.1.2.3/0.0.255.255"
+            add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_dst="+dstip+",actions=output:"+str(br.upports[0])
+            self.file.write(add_flow_cmd+"\n")
+            dstip = "10.1.1.3/0.0.255.255"
+            add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_dst="+dstip+",actions=output:"+str(br.upports[1])
+            self.file.write(add_flow_cmd+"\n")
+        else:
+            for port in br.upports:
+                dstip = "10."+str(br.pod)+"."+str(br.pos)+"."+str(start)+"/0.0.0.255"
+                start +=1
+                add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_dst="+dstip+",actions=output:"+str(port)
+                self.file.write(add_flow_cmd+"\n")
     
     def add4HopTorFlows(self,br):
         priority=100
@@ -34,7 +48,10 @@ class Forwarding():
         for port in br.upports:
             srcip=  "10."+str(br.pod)+"."+str(br.pos)+"."+str(start)+"/32"
             start += 1
-            add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_src="+srcip+",actions=output:"+str(port)
+            if br.imbalance:
+                add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_src="+srcip+",actions=output:"+str(br.upports[0])
+            else:
+                add_flow_cmd="ovs-ofctl add-flow "+br.name+" table="+str(br.frwdtable)+",priority="+str(priority)+",ip,nw_src="+srcip+",actions=output:"+str(port)
             self.file.write(add_flow_cmd+"\n")
 
 

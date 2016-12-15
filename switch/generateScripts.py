@@ -16,12 +16,13 @@ import yaml
 forwarding_only = False
 
 class phy_switch():
-    def __init__(self, name, virt_nodes, edgeInfo, file):
+    def __init__(self, name, virt_nodes, edgeInfo, file, imbEdgeInfo=None):
         self.name=name
         self.virt_nodes = virt_nodes
         self.file=file
         self.bridges=[]
         self.br_list=[]
+        self.imbEdgeInfo=imbEdgeInfo
         self.forw_inst=Forwarding(file)
         self.cherry_inst=CherryPickFlows(file, edgeInfo)
         for br_id in self.virt_nodes.keys():
@@ -35,6 +36,16 @@ class phy_switch():
     def add_flows(self):
         if len(self.bridges)==0:
             self.update_bridges()
+        
+        if self.imbEdgeInfo:
+            tor_br_ids=self.imbEdgeInfo['tor']
+            agg_br_ids=self.imbEdgeInfo['agg']
+            for br in self.bridges:
+                if br.id in tor_br_ids:
+                    br.imbalance = True
+                elif br.id in agg_br_ids:
+                    br.imbalance = True
+                
         for br in self.bridges:
             if forwarding_only:
                 table = br.frwdtable
@@ -124,6 +135,7 @@ class bridge():
         self.groupid=((id-1)*10)+1
         self.frwdtable = self.table+1
         self.cherrytable = self.table
+        self.imbalance=False
 
 class labSetup():
     def __init__(self):
@@ -160,13 +172,16 @@ if __name__ == "__main__":
 
     topo=yaml.load(open(yml_file,'r'))
     edgeInfo = topo['edges']
+    if 'imbalance' in topo:
+        imbEdgeInfo = topo['imbalance'][0]
+        print imbEdgeInfo
     dst_path = "./script/"
     if not os.path.exists (dst_path):
         os.makedirs (dst_path)
     for nodes in topo['nodes']:
         for phy_node, virt_nodes in nodes.items():
             fh=open(dst_path+"add-flows_"+phy_node+".sh",'w')
-            phy_switch_inst = phy_switch(phy_node, virt_nodes, edgeInfo, fh)
+            phy_switch_inst = phy_switch(phy_node, virt_nodes, edgeInfo, fh, imbEdgeInfo)
             phy_switch_inst.add_flows()
             fh=open(dst_path+"del-flows_"+phy_node+".sh",'w')
             phy_switch_inst = phy_switch(phy_node, virt_nodes, edgeInfo, fh)
