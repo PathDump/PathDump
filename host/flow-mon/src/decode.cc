@@ -164,7 +164,7 @@ void decode::decode_path(int16_t *vlan_ids,int8_t vlan_len,int8_t *sbuff,int8_t 
     dest_tor = ((dst_pod-1)*(k/2))+dbuff[2];
     path->push_back(src_tor);
 
-    for(int i=0;i < vlan_len;i++) {
+    for(int i=vlan_len-1;i >= 0;i--) {
         id=vlan_ids[i];
         if(vlan_ids[i]==0)
             return;
