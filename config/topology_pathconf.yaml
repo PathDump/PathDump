@@ -1,0 +1,288 @@
+#The structure of topology configuration
+#Physical switch IP address or domain name
+    #Vitural bridge id in that physical switch
+        #Level of bridge in the fat-tree topology
+        #Pod number
+        #Pos of bridge
+        #ipaddress of bridge
+        #datapath id used to create virtual bridge
+        #up: ports connected to upper bridges
+        #down: ports connected to down bridges
+
+#Below configuration is for a 4-ary fat-tree topology (see fattree.png).
+
+nodes:
+    - nsl105:
+        1 :
+            level : "ToR"
+            pod   : 1
+            pos   : 1
+            ipaddr: "10.1.1.1"
+            datapathID : "0000000000000001"
+            up    : [3, 4]
+            down  : [1, 2]
+        2 :
+            level : "ToR"
+            pod   : 1
+            pos   : 2
+            ipaddr: "10.1.2.1"
+            datapathID : "0000000000000002"
+            up    : [7, 8]
+            down  : [5, 6]
+        3 :
+            level : "ToR"
+            pod   : 2
+            pos   : 1
+            ipaddr: "10.2.1.1"
+            datapathID : "0000000000000003"
+            up    : [11, 12]
+            down  : [9, 10]
+        4 :
+            level : "ToR"
+            pod   : 2
+            pos   : 2
+            ipaddr: "10.2.2.1"
+            datapathID : "0000000000000004"
+            up    : [15, 16]
+            down  : [13, 14]
+    - nsl104:
+        5 :
+            level : "ToR"
+            pod   : 3
+            pos   : 1
+            ipaddr: "10.3.1.1"
+            datapathID : "0000000000000005"
+            up    : [3, 4]
+            down  : [1, 2]
+        6 :
+            level : "ToR"
+            pod   : 3
+            pos   : 2
+            ipaddr: "10.3.2.1"
+            datapathID : "0000000000000006"
+            up    : [7, 8]
+            down  : [5, 6]
+        7 :
+            level : "ToR"
+            pod   : 4
+            pos   : 1
+            ipaddr: "10.4.1.1"
+            datapathID : "0000000000000007"
+            up    : [11, 12]
+            down  : [9, 10]
+        8 :
+            level : "ToR"
+            pod   : 4
+            pos   : 2
+            ipaddr: "10.4.2.1"
+            datapathID : "0000000000000008"
+            up    : [15, 16]
+            down  : [13, 14]
+    - nsl103:
+        9 :
+            level : "Agg"
+            pod   : 1
+            pos   : 3
+            ipaddr: "10.1.3.1"
+            datapathID : "0000000000000009"
+            up    : [3, 4]
+            down  : [1, 2]
+        10 :
+            level : "Agg"
+            pod   : 1
+            pos   : 4
+            ipaddr: "10.1.4.1"
+            datapathID : "000000000000000A"
+            up    : [7, 8]
+            down  : [5, 6]
+        11 :
+            level : "Agg"
+            pod   : 2
+            pos   : 3
+            ipaddr: "10.2.3.1"
+            datapathID : "000000000000000B"
+            up    : [11, 12]
+            down  : [9, 10]
+        12 :
+            level : "Agg"
+            pod   : 2
+            pos   : 4
+            ipaddr: "10.2.4.1"
+            datapathID : "000000000000000C"
+            up    : [15, 16]
+            down  : [13, 14]
+    - nsl102:
+        13 :
+            level : "Agg"
+            pod   : 3
+            pos   : 3
+            ipaddr: "10.3.3.1"
+            datapathID : "000000000000000D"
+            up    : [3, 4]
+            down  : [1, 2]
+        14 :
+            level : "Agg"
+            pod   : 3
+            pos   : 4
+            ipaddr: "10.3.4.1"
+            datapathID : "000000000000000E"
+            up    : [7, 8]
+            down  : [5, 6]
+        15 :
+            level : "Agg"
+            pod   : 4
+            pos   : 3
+            ipaddr: "10.4.3.1"
+            datapathID : "000000000000000F"
+            up    : [11, 12]
+            down  : [9, 10]
+        16 :
+            level : "Agg"
+            pod   : 4
+            pos   : 4
+            ipaddr: "10.4.4.1"
+            datapathID : "0000000000000010"
+            up    : [15, 16]
+            down  : [13, 14]
+    - nsl101:
+        17 :
+            level : "Core"
+            pod   : 5
+            pos   : 1
+            ipaddr: "10.5.1.1"
+            datapathID : "0000000000000011"
+            up    : []
+            down    : [1, 2, 3, 4]
+        18 :
+            level : "Core"
+            pod   : 5
+            pos   : 2
+            ipaddr: "10.5.2.1"
+            datapathID : "0000000000000012"
+            up    : []
+            down  : [5, 6, 7, 8]
+    - nsl100:
+        19 :
+            level : "Core"
+            pod   : 5
+            pos   : 3
+            ipaddr: "10.5.3.1"
+            datapathID : "0000000000000013"
+            up    : []
+            down    : [1, 2, 3, 4]
+        20 :
+            level : "Core"
+            pod   : 5
+            pos   : 4
+            ipaddr: "10.5.4.1"
+            datapathID : "0000000000000014"
+            up    : []
+            down  : [5, 6, 7, 8]
+
+edges:
+    # x: [<switch id> , <port> ]
+    # y: [<switch id> , <port> ]
+    # link_id: When rule matches, switch embeds this link id  into packet header.
+    - x: [1, 3]
+      y: [9, 1]
+      link_id: 1
+    - x: [1, 4]
+      y: [10, 5]
+      link_id: 2
+    - x: [2, 7]
+      y: [9, 2]
+      link_id: 3
+    - x: [2, 8]
+      y: [10, 6]
+      link_id: 4
+    - x: [3, 11]
+      y: [11, 9]
+      link_id: 1
+    - x: [3, 12]
+      y: [12, 13]
+      link_id: 2
+    - x: [4, 15]
+      y: [11, 10]
+      link_id: 3
+    - x: [4, 16]
+      y: [12, 14]
+      link_id: 4
+    - x: [5, 3]
+      y: [13, 1]
+      link_id: 1
+    - x: [5, 4]
+      y: [14, 5]
+      link_id: 2
+    - x: [6, 7]
+      y: [13, 2]
+      link_id: 3
+    - x: [6, 8]
+      y: [14, 6]
+      link_id: 4
+    - x: [7, 11]
+      y: [15, 9]
+      link_id: 1
+    - x: [7, 12]
+      y: [16, 13]
+      link_id: 2
+    - x: [8, 15]
+      y: [15, 10]
+      link_id: 3
+    - x: [8, 16]
+      y: [16, 14]
+      link_id: 4
+    - x: [9, 3]
+      y: [17, 1]
+      link_id: 9
+    - x: [9, 4]
+      y: [18, 5]
+      link_id: 10
+    - x: [10, 7]
+      y: [19, 1]
+      link_id: 11
+    - x: [10, 8]
+      y: [20, 5]
+      link_id: 12
+    - x: [11, 11]
+      y: [17, 2]
+      link_id: 11
+    - x: [11, 12]
+      y: [18, 6]
+      link_id: 12
+    - x: [12, 15]
+      y: [19, 2]
+      link_id: 13
+    - x: [12, 16]
+      y: [20, 6]
+      link_id: 14
+    - x: [13, 3]
+      y: [17, 3]
+      link_id: 13
+    - x: [13, 4]
+      y: [18, 7]
+      link_id: 14
+    - x: [14, 7]
+      y: [19, 3]
+      link_id: 15
+    - x: [14, 8]
+      y: [20, 7]
+      link_id: 16
+    - x: [15, 11]
+      y: [17, 4]
+      link_id: 15
+    - x: [15, 12]
+      y: [18, 8]
+      link_id: 16
+    - x: [16, 15]
+      y: [19, 4]
+      link_id: 9
+    - x: [16, 16]
+      y: [20, 8]
+      link_id: 10
+
+pathconf: True
+
+
+
+
+      
