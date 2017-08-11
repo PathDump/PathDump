@@ -94,7 +94,7 @@ def doAndFilters (filters):
         return ret_fltr
 
 # returns an IP address as Node ID
-def getCurNodeID ():
+def getCurNodeID():
     return socket.gethostname() 
     #return ni.ifaddresses('eth0')[2][0]['addr']
 
