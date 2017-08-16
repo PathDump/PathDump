@@ -11,6 +11,7 @@ import sys
 import os
 import helperapi as helper
 import confparser as cp
+from datetime import datetime
 
 query_results = []
 
@@ -39,7 +40,10 @@ def getpathdumpget():
 
 def handleRequest (req):
     global query_results
-
+    
+    if req['api'] == 'execQuery' and 'argv' in req['query']:
+        req['query']['argv'].append({'host_hndlreq':str(datetime.now())})
+        
     Tree = req['tree']
     cur = helper.getCurNodeID ()
     if len (Tree[cur]['child']) == 0:
